@@ -4,11 +4,11 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
-  important: '#root', // ESTRATÉGIA CRUCIAL: Aumenta a prioridade do Tailwind
+  important: '#root',
   theme: {
     extend: {
       colors: {
-        primary: '#005f73', // Adicione as cores do seu tema aqui também
+        primary: '#005f73',
         secondary: '#94d2bd',
       }
     },
