@@ -12,6 +12,15 @@ export default {
         secondary: '#94d2bd',
       }
     },
+    fontFamily: {
+        nunito_sans: ['"Nunito Sans"', 'sans-serif'],
+        inter: ['"Inter"', 'sans-serif'],
+      },
+      animation: {
+        'float-slow': 'float 6s ease-in-out infinite',   // Flutua devagar
+        'float-medium': 'float 5s ease-in-out infinite', // Flutua médio
+        'bounce-slow': 'bounce 3s infinite',             // Pulo bem lento
+      }
   },
   plugins: [],
 }
