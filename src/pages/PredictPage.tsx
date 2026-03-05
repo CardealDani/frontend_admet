@@ -46,14 +46,13 @@
 //   );
 // }
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { 
-  TextField, Button, Paper, Typography, Chip, Divider, IconButton 
+  TextField, Button, Paper, Typography, Chip, Divider 
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import ScienceIcon from '@mui/icons-material/Science';
-import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 
 // Importando o filtro que criamos antes
 import RangeFilter from '../components/filters/RangeFilter';

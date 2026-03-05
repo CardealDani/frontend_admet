@@ -1,5 +1,4 @@
 // src/pages/Home/FeaturesSection.tsx
-import React from 'react';
 import { Typography } from '@mui/material';
 import TuneIcon from '@mui/icons-material/Tune';
 import ScienceIcon from '@mui/icons-material/Science';

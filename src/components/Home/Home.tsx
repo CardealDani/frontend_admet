@@ -3,7 +3,6 @@ import HeroSection from './HeroSection';
 import FeaturesSection from './FeaturesSection';
 import HowItWorksSection from './HowItWorksSection';
 import AboutSection from './AboutSection';
-import { Footer } from '../Footer';
 
 const Home = () => {
     return (

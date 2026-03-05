@@ -1,5 +1,4 @@
 // src/pages/Home/AboutSection.tsx
-import React from 'react';
 import { Button, Typography } from '@mui/material';
 import BiotechIcon from '@mui/icons-material/Biotech';
 import SchoolIcon from '@mui/icons-material/School';

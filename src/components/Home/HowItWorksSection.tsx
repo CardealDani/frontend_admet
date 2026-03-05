@@ -1,5 +1,4 @@
 // src/pages/Home/HowItWorksSection.tsx
-import React from 'react';
 import { Typography } from '@mui/material';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import MemoryIcon from '@mui/icons-material/Memory';
@@ -50,7 +49,7 @@ const HowItWorksSection = () => {
              <path d="M100,20 Q300,80 500,20 T900,20" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="8 8" />
           </svg>
 
-          {steps.map((step, index) => (
+          {steps.map((step) => (
             <div key={step.id} className="relative flex flex-col items-center text-center z-10 group">
               
               {/* Círculo do Ícone com sombra e cor da marca */}
