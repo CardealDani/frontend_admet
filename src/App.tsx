@@ -1,5 +1,4 @@
 // src/App.tsx
-import { BrowserRouter } from 'react-router-dom';
 import AppRoutes from './routes/AppRoutes';
 import { 
   CssBaseline, 
@@ -20,9 +19,7 @@ function App() {
     <StyledEngineProvider injectFirst> {/* <--- ISSO FAZ O TAILWIND FUNCIONAR */}
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <BrowserRouter>
           <AppRoutes />
-        </BrowserRouter>
       </ThemeProvider>
     </StyledEngineProvider>
   );
