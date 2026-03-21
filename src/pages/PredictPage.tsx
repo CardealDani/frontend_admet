@@ -1,27 +1,62 @@
 // src/pages/PredictPage.tsx
-import React, { useState } from 'react';
-import Header from '../components/Header/Header';
+import React, { useState, useEffect, useRef } from 'react';
+import AppHeader from '../components/Header/AppHeader';
 import Footer from '../components/Footer/Footer';
-import { Button, Typography, CircularProgress } from '@mui/material';
+import {
+  Button, Typography, CircularProgress,
+  Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions
+} from '@mui/material';
+
+// Ícones
 import ScienceIcon from '@mui/icons-material/Science';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import KeyboardIcon from '@mui/icons-material/Keyboard';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 
-// IMPORTAÇÃO DO NOVO LAYOUT DE RESULTADOS (que criamos no passo anterior)
+// IMPORTAÇÃO DO NOVO LAYOUT DE RESULTADOS
 import ResultsLayout from '../components/results/ResultsLayout';
+import { Header } from '../components/Header';
 
-// Tipagem para controlar as fases da tela
 type Phase = 'input' | 'loading' | 'results';
 
 const PredictPage = () => {
-  // Controle de Fases da Tela
   const [phase, setPhase] = useState<Phase>('input');
 
-  // Estados do Formulário Original
   const [activeTab, setActiveTab] = useState<'smiles' | 'file'>('smiles');
   const [smilesInput, setSmilesInput] = useState('');
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+
+  // =========================================================================
+  // ESTADOS DO MODAL DE AVISO (PREVENÇÃO DE ERROS)
+  // =========================================================================
+  const [showWarningModal, setShowWarningModal] = useState(false);
+  const [pendingAction, setPendingAction] = useState<'browser_back' | 'button_reset' | null>(null);
+
+  // Ref para evitar conflito entre o nosso botão de voltar e o botão do navegador
+  const isProgrammaticBack = useRef(false);
+
+  // =========================================================================
+  // MÁGICA DO HISTÓRICO: Interceptando o botão Voltar do Navegador
+  // =========================================================================
+  useEffect(() => {
+    const handlePopState = (event: PopStateEvent) => {
+      // Se fomos nós que mandamos voltar via código, apenas ignora
+      if (isProgrammaticBack.current) {
+        isProgrammaticBack.current = false;
+        return;
+      }
+
+      // Se o usuário clicou no voltar do navegador durante os resultados:
+      if (phase === 'results') {
+        setPendingAction('browser_back');
+        setShowWarningModal(true);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [phase]);
 
   // Função para capturar o arquivo
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -30,42 +65,65 @@ const PredictPage = () => {
     }
   };
 
-  // Lógica de desativação do botão
   const isButtonDisabled =
     (activeTab === 'smiles' && smilesInput.trim() !== '') ||
     (activeTab === 'file' && uploadedFile !== null);
 
-  // Função disparada ao clicar em "Executar Predição"
   const handlePredict = () => {
-    // 1. Muda a tela para "Loading"
     setPhase('loading');
-
-    // Simulação de chamada de API com atraso (timeout)
-    // No futuro, isso será substituído por um axios.post() pro seu Django
     setTimeout(() => {
-      // 2. Após 2.5 segundos, exibe os Resultados
+      // Injeta um registro falso no histórico para habilitar o botão "Voltar" do navegador
+      window.history.pushState({ page: 'results' }, '', window.location.pathname);
       setPhase('results');
-    }, 2500);
+    }, 100);
   };
 
-  // Função para limpar tudo e voltar pro início (chamada pelo botão "Nova Análise" no ResultsLayout)
-  const handleReset = () => {
+  // Quando o usuário clica no botão "Nova Análise" do nosso layout
+  const handleResetRequest = () => {
+    setPendingAction('button_reset');
+    setShowWarningModal(true);
+  };
+
+  // Ação: Usuário confirmou que quer perder os dados
+  const handleConfirmReset = () => {
+    setShowWarningModal(false);
+    setPhase('input');
     setSmilesInput('');
     setUploadedFile(null);
-    setPhase('input');
+
+    // Se ele clicou no nosso botão UI, precisamos limpar o histórico que criamos
+    if (pendingAction === 'button_reset') {
+      isProgrammaticBack.current = true;
+      window.history.back();
+    }
+    setPendingAction(null);
   };
 
+  // Ação: Usuário desistiu de voltar
+  const handleCancelReset = () => {
+    setShowWarningModal(false);
+
+    // Se ele tentou voltar pelo navegador e desistiu, o navegador já alterou a URL. 
+    // Precisamos recriar o estado do histórico para mantê-lo na página.
+    if (pendingAction === 'browser_back') {
+      window.history.pushState({ page: 'results' }, '', window.location.pathname);
+    }
+    setPendingAction(null);
+  };
+
+
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
-      <Header />
+    <div className="min-h-screen flex flex-col bg-gray-50 overflow-hidden">
+      {phase === 'results' && (
+        <AppHeader onNewAnalysis={phase === 'results' ? handleResetRequest : handleConfirmReset} />
+      ) || (<Header />)}
 
-      <main className="flex-grow pt-28 pb-12 px-6 flex flex-col items-center max-w-7xl mx-auto w-full">
+      {/* Como o novo header é mais fino (h-16), ajustamos os paddings do main */}
+      <main className={`flex-grow flex flex-col w-full ${phase === 'results' ? 'pt-16' : 'pt-24 pb-12 max-w-7xl mx-auto px-6 items-center justify-center'}`}>
 
-        {/* ========================================================================= */}
-        {/* FASE 1: INPUT (Seu formulário original, exibido apenas se phase === 'input') */}
-        {/* ========================================================================= */}
+        {/* FASE 1: INPUT */}
         {phase === 'input' && (
-          <div className="w-full flex flex-col items-center justify-center animate-fade-in-up ">
+          <div className="w-full flex flex-col items-center justify-center animate-fade-in-up h-full">
             <div className="text-center mb-10 max-w-2xl">
               <Typography variant="h4" className="font-nunito_sans font-bold text-gray-900 mb-3">
                 Nova <span className="text-blue-600">Análise ADMET</span>
@@ -76,8 +134,6 @@ const PredictPage = () => {
             </div>
 
             <div className="bg-white w-full max-w-3xl rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
-
-              {/* ABAS COM ANIMAÇÃO SLIDE */}
               <div className="relative flex w-full bg-gray-50/50 border-b border-gray-200">
                 <div
                   className={`absolute bottom-0 h-[3px] bg-blue-600 transition-all duration-300 ease-in-out w-1/2 ${activeTab === 'smiles' ? 'left-0' : 'left-1/2'
@@ -102,7 +158,6 @@ const PredictPage = () => {
               </div>
 
               <div className="p-8 min-h-[250px] flex flex-col justify-between">
-                {/* CONTEÚDO DA ABA */}
                 <div className="flex-grow">
                   {activeTab === 'smiles' ? (
                     <div className="animate-fade-in-up">
@@ -156,7 +211,6 @@ const PredictPage = () => {
                   )}
                 </div>
 
-                {/* BOTÃO DE AÇÃO */}
                 <div className="mt-8 flex justify-end">
                   <Button
                     variant="contained"
@@ -177,11 +231,9 @@ const PredictPage = () => {
           </div>
         )}
 
-        {/* ========================================================================= */}
-        {/* FASE 2: LOADING (Exibido enquanto simula a API)                           */}
-        {/* ========================================================================= */}
+        {/* FASE 2: LOADING */}
         {phase === 'loading' && (
-          <div className="flex-grow flex flex-col items-center justify-center animate-fade-in-up w-full h-full my-auto">
+          <div className="flex-grow flex flex-col items-center justify-center animate-fade-in-up w-full h-full">
             <CircularProgress size={60} thickness={4} className="text-blue-600 mb-6" />
             <Typography variant="h5" className="font-nunito_sans font-bold text-gray-800 mb-2">
               Processando Estruturas...
@@ -192,19 +244,105 @@ const PredictPage = () => {
           </div>
         )}
 
-        {/* ========================================================================= */}
-        {/* FASE 3: RESULTADOS (Chama o componente ResultsLayout)                     */}
-        {/* ========================================================================= */}
+        {/* FASE 3: RESULTADOS */}
         {phase === 'results' && (
           <ResultsLayout
-            onBack={handleReset}
-            isBatch={activeTab === 'file'} // Diz pro layout se é lote (true) ou individual (false)
+            onBack={handleResetRequest} // Passamos a função que aciona o modal, não o reset direto
+            isBatch={activeTab === 'file'}
           />
         )}
 
       </main>
 
-      <Footer />
+      {phase !== 'results' && (
+        <Footer />
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL DE CONFIRMAÇÃO (POPUP)                                              */}
+      {/* ========================================================================= */}
+      {/* ========================================================================= */}
+      {/* MODAL DE CONFIRMAÇÃO (POPUP)                                              */}
+      {/* ========================================================================= */}
+      <Dialog
+        open={showWarningModal}
+        onClose={handleCancelReset}
+        // SlotProps permite adicionar aquele fundo levemente desfocado muito elegante
+        slotProps={{
+          backdrop: {
+            sx: {
+              backdropFilter: 'blur(3px)',
+              backgroundColor: 'rgba(15, 23, 42, 0.4)', // Fundo escuro sutil
+            }
+          }
+        }}
+        // PaperProps controla a "caixa branca" do modal usando o sistema do MUI
+        PaperProps={{
+          sx: {
+            borderRadius: 4, // Bordas bem arredondadas
+            p: 1, // Padding interno extra
+            minWidth: { xs: '90vw', sm: '420px' },
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', // Sombra super suave
+          }
+        }}
+      >
+        <DialogTitle sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', pb: 1, pt: 4 }}>
+          {/* Ícone gigante e centralizado para chamar atenção ao risco */}
+          <div className="bg-red-50 text-red-500 p-4 rounded-full mb-4">
+            <WarningAmberIcon sx={{ fontSize: 48 }} />
+          </div>
+          <Typography variant="h5" sx={{ fontFamily: 'Nunito Sans, sans-serif', fontWeight: 800, color: '#0f172a' }}>
+            Descartar resultados?
+          </Typography>
+        </DialogTitle>
+
+        <DialogContent sx={{ textAlign: 'center', pb: 4 }}>
+          <DialogContentText sx={{ fontFamily: 'Inter, sans-serif', color: '#64748b', fontSize: '0.95rem', lineHeight: 1.6 }}>
+            Você está prestes a sair desta análise. Todos os <strong>filtros aplicados</strong> e <strong>cálculos gerados</strong> serão perdidos. Deseja realmente iniciar uma nova predição?
+          </DialogContentText>
+        </DialogContent>
+
+        <DialogActions sx={{ justifyContent: 'center', gap: 2, px: 3, pb: 3 }}>
+          <Button
+            onClick={handleCancelReset}
+            variant="outlined"
+            color="inherit"
+            disableElevation
+            sx={{
+              fontFamily: 'Inter, sans-serif',
+              fontWeight: 600,
+              textTransform: 'none',
+              borderRadius: 2,
+              px: 3,
+              py: 1.2,
+              color: '#64748b',
+              borderColor: '#e2e8f0',
+              '&:hover': { backgroundColor: '#f8fafc', borderColor: '#cbd5e1' }
+            }}
+          >
+            Cancelar
+          </Button>
+          <Button
+            onClick={handleConfirmReset}
+            variant="contained"
+            color="error"
+            disableElevation
+            sx={{
+              fontFamily: 'Nunito Sans, sans-serif',
+              fontWeight: 800,
+              textTransform: 'none',
+              borderRadius: 2,
+              px: 4,
+              py: 1.2,
+              backgroundColor: '#ef4444',
+              '&:hover': { backgroundColor: '#dc2626' }
+            }}
+          >
+            Sim, descartar
+          </Button>
+        </DialogActions>
+      </Dialog>
+
     </div>
   );
 };

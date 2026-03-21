@@ -16,7 +16,7 @@ const theme = createTheme({
 
 function App() {
   return (
-    <StyledEngineProvider injectFirst> {/* <--- ISSO FAZ O TAILWIND FUNCIONAR */}
+    <StyledEngineProvider injectFirst> 
       <ThemeProvider theme={theme}>
         <CssBaseline />
           <AppRoutes />
