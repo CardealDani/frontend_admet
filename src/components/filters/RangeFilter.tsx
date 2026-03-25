@@ -1,5 +1,5 @@
 // src/components/filters/RangeFilter.tsx
-import React from 'react';
+
 import { Slider, TextField, Typography } from '@mui/material';
 
 interface RangeFilterProps {
@@ -11,15 +11,15 @@ interface RangeFilterProps {
   onChange: (newValue: number[]) => void;
 }
 
-const RangeFilter: React.FC<RangeFilterProps> = ({ 
-  label, 
-  min, 
-  max, 
-  value, 
-  unit, 
-  onChange 
+const RangeFilter: React.FC<RangeFilterProps> = ({
+  label,
+  min,
+  max,
+  value,
+  unit,
+  onChange
 }) => {
-  
+
   // Handler para o Slider (MUI retorna event, value)
   const handleSliderChange = (_event: Event, newValue: number | number[]) => {
     onChange(newValue as number[]);
@@ -29,7 +29,7 @@ const RangeFilter: React.FC<RangeFilterProps> = ({
   const handleInputChange = (index: 0 | 1, val: string) => {
     const num = Number(val);
     if (isNaN(num)) return;
-    
+
     const newValue = [...value];
     newValue[index] = num;
     onChange(newValue);
@@ -38,7 +38,7 @@ const RangeFilter: React.FC<RangeFilterProps> = ({
   return (
     // Tailwind controlando o container (padding, borda, fundo)
     <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-      
+
       <div className="flex justify-between items-center mb-2">
         <Typography variant="subtitle2" className="font-bold text-gray-700">
           {label}
@@ -57,7 +57,7 @@ const RangeFilter: React.FC<RangeFilterProps> = ({
           size="small"
           // Usando sx para customizar a cor da barra baseado no seu tema
           sx={{
-            color: 'primary.main', 
+            color: 'primary.main',
             '& .MuiSlider-thumb': {
               borderRadius: '4px', // Deixando o "pino" quadrado para um look mais técnico
             },

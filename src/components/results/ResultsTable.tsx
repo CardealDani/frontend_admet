@@ -1,5 +1,5 @@
 // src/components/results/ResultsTable.tsx
-import React from 'react';
+
 import { Typography, Tooltip } from '@mui/material';
 import SwapVertIcon from '@mui/icons-material/SwapVert';
 
@@ -27,14 +27,14 @@ const ResultsTable = ({ molecules, onRowClick, selectedMolId }: ResultsTableProp
     <div className="w-full h-full flex flex-col bg-white">
       <div className="flex-1 overflow-auto custom-scrollbar">
         <table className="w-full text-left border-collapse relative">
-          
+
           <thead className="bg-white border-b-2 border-gray-200 sticky top-0 z-10 shadow-sm">
             <tr>
               <th className="p-3 font-inter font-bold text-xs text-gray-800 uppercase tracking-wider text-center w-12">#</th>
               <th className="p-3 font-inter font-bold text-xs text-gray-800 uppercase tracking-wider text-center w-24">2D</th>
               <th className="p-3 font-inter font-bold text-xs text-gray-800 uppercase tracking-wider">Molecule</th>
-              <th className="p-3 font-inter font-bold text-xs text-gray-800 uppercase tracking-wider"><div className="flex items-center gap-1 cursor-pointer">MW <SwapVertIcon fontSize="small" className="opacity-50"/></div></th>
-              <th className="p-3 font-inter font-bold text-xs text-gray-800 uppercase tracking-wider"><div className="flex items-center gap-1 cursor-pointer">LogP <SwapVertIcon fontSize="small" className="opacity-50"/></div></th>
+              <th className="p-3 font-inter font-bold text-xs text-gray-800 uppercase tracking-wider"><div className="flex items-center gap-1 cursor-pointer">MW <SwapVertIcon fontSize="small" className="opacity-50" /></div></th>
+              <th className="p-3 font-inter font-bold text-xs text-gray-800 uppercase tracking-wider"><div className="flex items-center gap-1 cursor-pointer">LogP <SwapVertIcon fontSize="small" className="opacity-50" /></div></th>
               <th className="p-3 font-inter font-bold text-xs text-gray-800 uppercase tracking-wider text-center">Ames</th>
               <th className="p-3 font-inter font-bold text-xs text-gray-800 uppercase tracking-wider text-center">Hepato</th>
               <th className="p-3 font-inter font-bold text-xs text-gray-800 uppercase tracking-wider text-center">Lipinski</th>
@@ -45,14 +45,14 @@ const ResultsTable = ({ molecules, onRowClick, selectedMolId }: ResultsTableProp
             {molecules.map((mol, index) => {
               const isSelected = mol.id === selectedMolId;
               return (
-                <tr 
-                  key={mol.id} 
+                <tr
+                  key={mol.id}
                   onClick={() => onRowClick(mol)}
                   // A linha inteira é clicável. Fica azulada se estiver selecionada.
                   className={`cursor-pointer transition-colors group ${isSelected ? 'bg-blue-50/50 border-l-4 border-l-blue-500' : 'hover:bg-gray-50 border-l-4 border-l-transparent'}`}
                 >
                   <td className="p-3 text-center border-r border-gray-50">
-                     <Typography className="font-inter font-medium text-gray-400 text-xs">{index + 1}</Typography>
+                    <Typography className="font-inter font-medium text-gray-400 text-xs">{index + 1}</Typography>
                   </td>
                   <td className="p-2 flex items-center justify-center">
                     <div className="w-16 h-12 bg-transparent flex items-center justify-center mix-blend-multiply">

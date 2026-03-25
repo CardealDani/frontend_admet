@@ -1,18 +1,13 @@
 // src/components/results/ResultsLayout.tsx
 import React, { useState } from 'react';
-import { Typography, Chip, IconButton, Tooltip, Badge, Button } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import SearchIcon from '@mui/icons-material/Search';
+import { Typography, Chip, Button } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import ViewListIcon from '@mui/icons-material/ViewList';
-import FilterListIcon from '@mui/icons-material/FilterList';
-import FilterListOffIcon from '@mui/icons-material/FilterListOff';
 import DownloadIcon from '@mui/icons-material/Download';
 
 import FilterSidebar from './FilterSidebar';
 import ResultsTable from './ResultsTable';
 import MoleculePreview from './MoleculePreview'; // O nosso novo painel direito!
-import { LuFilter } from 'react-icons/lu';
 
 // O MOCK SUPREMO (Com todos os dados definidos no seu prompt)
 const MOCK_DATA = [

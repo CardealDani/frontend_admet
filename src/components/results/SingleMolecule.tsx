@@ -1,5 +1,5 @@
 // src/components/results/SingleMolecule.tsx
-import React from 'react';
+
 import { Typography, Chip, Divider } from '@mui/material';
 
 // Componentes Auxiliares (Apenas para a visualização individual)
@@ -37,7 +37,7 @@ const SingleMolecule = () => {
         <div className="bg-white rounded-xl border border-gray-200 p-4 h-56 flex flex-col relative shadow-sm hover:shadow-md transition-shadow">
           <span className="absolute top-3 left-4 text-[10px] font-bold text-gray-400 uppercase tracking-wider">Estrutura 2D</span>
           <div className="flex-1 flex items-center justify-center mt-4">
-              <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Aspirin-skeletal.svg/1200px-Aspirin-skeletal.svg.png" alt="Molecula" className="h-32 object-contain opacity-90" />
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Aspirin-skeletal.svg/1200px-Aspirin-skeletal.svg.png" alt="Molecula" className="h-32 object-contain opacity-90" />
           </div>
         </div>
 
@@ -48,9 +48,9 @@ const SingleMolecule = () => {
             <Typography variant="h2" className="font-nunito_sans font-extrabold text-teal-500 leading-none">8.5</Typography>
             <Typography className="font-inter text-sm text-gray-500 font-medium mt-1">Alta viabilidade</Typography>
             <div className="mt-4 w-full px-8">
-                <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-teal-500 w-[85%]"></div>
-                </div>
+              <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+                <div className="h-full bg-teal-500 w-[85%]"></div>
+              </div>
             </div>
           </div>
         </div>

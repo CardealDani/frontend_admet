@@ -9,10 +9,7 @@ import RefreshIcon from '@mui/icons-material/Refresh';
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import { LuFilter } from 'react-icons/lu';
 
-// Componentes Refatorados e Tipos
-import { FilterSection } from './filters/FilterSection';
-import { RangeSliderControl } from './filters/RangeSliderControl';
-import { defaultFilters, filterPresets, PFQ_FILTERS_CONFIG } from '../../types/filters';
+import { defaultFilters} from '../../types/filters';
 import type { AdmetFilters } from '../../types/filters';
 
 import { PfqMedChemSection } from './filters/sections/PfqMedChemSection';
@@ -67,12 +64,7 @@ const FilterSidebar = ({ isSidebarOpen, toggleSidebar }: FilterSidebarProps) => 
     setPresetName('default');
   };
 
-  const handlePresetChange = (newPreset: string) => {
-    setPresetName(newPreset);
-    if (filterPresets[newPreset]) {
-      setFilters(filterPresets[newPreset]);
-    }
-  };
+
   // ==========================================
   // LÓGICA INTELIGENTE DE CONTAGEM DE BADGES
   // ==========================================
@@ -302,7 +294,7 @@ const FilterSidebar = ({ isSidebarOpen, toggleSidebar }: FilterSidebarProps) => 
           <DistributionSection filters={filters} count={countDist} updateFilter={updateFilter} toggleArrayFilter={toggleArrayFilter} />
           <MetabolismSection filters={filters} count={countMet} updateFilter={updateFilter} />
           <ExcretionSection filters={filters} count={countExc} updateFilter={updateFilter} />
-          <ToxicitySection filters={filters} count={countTox} updateFilter={updateFilter} toggleArrayFilter={toggleArrayFilter} />
+          <ToxicitySection filters={filters} count={countTox} toggleArrayFilter={toggleArrayFilter} />
 
         </div>
 

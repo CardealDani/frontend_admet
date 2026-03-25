@@ -40,7 +40,7 @@ const PredictPage = () => {
   // MÁGICA DO HISTÓRICO: Interceptando o botão Voltar do Navegador
   // =========================================================================
   useEffect(() => {
-    const handlePopState = (event: PopStateEvent) => {
+    const handlePopState = () => {
       // Se fomos nós que mandamos voltar via código, apenas ignora
       if (isProgrammaticBack.current) {
         isProgrammaticBack.current = false;
