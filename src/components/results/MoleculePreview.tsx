@@ -43,7 +43,7 @@ const MoleculePreview = ({ molecule, onClose, onViewFullReport }: { molecule: an
 
   return (
     // Largura maior (w-96 ou até 420px) para respirar bem
-    <div className="w-[420px] h-full bg-white border-l border-gray-200 flex flex-col shadow-2xl z-20 shrink-0 animate-slide-in-right">
+    <div className="w-[420px] h-full bg-white border-l border-gray-200 flex flex-col shadow-2xl z-20 shrink-0 animate-slide-in-right ">
       
       {/* 1. HEADER DO PREVIEW (Nome e SMILES) */}
       <div className="p-5 border-b border-gray-100 flex justify-between items-start bg-slate-50/50 shrink-0">

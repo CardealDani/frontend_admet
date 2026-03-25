@@ -82,14 +82,13 @@ const ResultsLayout = ({ onBack, isBatch }: ResultsLayoutProps) => {
   return (
     <div className="w-full flex h-[calc(100vh-80px)] animate-fade-in bg-gray-50 mt-[-2rem] md:mt-0 overflow-hidden">
 
-     {isBatch && (
+      {isBatch && (
         <aside
-          className={`bg-white flex flex-col h-full shadow-[2px_0_8px_-4px_rgba(0,0,0,0.05)] z-20 shrink-0 overflow-hidden transition-all duration-300 ease-in-out border-r border-gray-200 ${
-            isSidebarOpen ? 'w-[380px]' : 'w-16'
-          }`}
+          className={`bg-white flex flex-col h-full shadow-[2px_0_8px_-4px_rgba(0,0,0,0.05)] z-20 shrink-0 overflow-hidden transition-all duration-300 ease-in-out border-r border-gray-200 ${isSidebarOpen ? 'w-[420px]' : 'w-16'
+            }`}
         >
           {/* O min-w-[380px] impede que o conteúdo amasse. O que não cabe em 64px é apenas "cortado" pelo overflow-hidden do aside */}
-          <div className="w-[380px] min-w-[380px] flex flex-col h-full">
+          <div className="w-[420px] min-w-[420px] flex flex-col h-full">
             {/* Passamos o estado e a função para o FilterSidebar se autogerenciar */}
             <FilterSidebar isSidebarOpen={isSidebarOpen} toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
           </div>
@@ -97,75 +96,83 @@ const ResultsLayout = ({ onBack, isBatch }: ResultsLayoutProps) => {
       )}
 
       {/* PAINEL 2: CENTRO (TABELA / DASHBOARD) */}
-      <main className="flex-1 flex flex-col h-full overflow-hidden relative">
+      <main className="flex-1 flex flex-col h-full overflow-hidden relative bg-slate-50">
 
-        {/* ========================================================= */}
-        {/* TOPBAR PERMANENTE (Nunca some, independente dos filtros)  */}
-        {/* ========================================================= */}
-        <div className="px-6 py-4 border-b border-gray-200 bg-white flex justify-between items-center shrink-0 shadow-sm z-10">
+        {/* Container que cria o "respiro" (Margem) em volta da tabela */}
+        <div className="flex-1 p-6 h-full flex flex-col min-h-0">
 
-          {/* LADO ESQUERDO DA TOPBAR: Título e Toggle de Filtros */}
-          <div className="flex items-center gap-4">
-            <div className="p-2 rounded-lg bg-indigo-50 text-indigo-600">
-              <ViewListIcon fontSize="small" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <Typography className="font-nunito_sans font-extrabold text-gray-900 text-lg leading-none">
-                  Análise em Lote
-                </Typography>
-                <Chip label="124 resultados" size="small" className="bg-gray-100 text-gray-600 font-inter text-[11px] font-bold h-5" />
+          {/* O CARTÃO BRANCO (Onde a tabela e a topbar moram) */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-200 flex flex-col h-full overflow-hidden">
+
+            {/* TOPBAR (Agora faz parte do cartão, atuando como o cabeçalho dele) */}
+            <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center shrink-0">
+
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-blue-50 text-blue-600">
+                  <ViewListIcon fontSize="small" />
+                </div>
+                <div className="flex items-center gap-3">
+                  <Typography className="font-nunito_sans font-extrabold text-gray-900 text-lg leading-none">
+                    Análise em Lote
+                  </Typography>
+                  <Chip label="124 resultados" size="small" className="bg-gray-100 text-gray-600 font-inter text-[11px] font-bold h-5" />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                {/* O Botão de Nova Predição continua aqui, mas eu mudei o ícone para + para ficar mais universal */}
+                <Button
+                  onClick={onBack}
+                  variant="text"
+                  startIcon={<AddIcon />}
+                  className="font-inter font-bold normal-case text-blue-600 hover:bg-blue-50 px-4"
+                >
+                  Nova Predição
+                </Button>
+                <div className="w-px h-6 bg-gray-200 mx-1"></div>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<DownloadIcon />}
+                  className="normal-case font-bold border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 shadow-sm px-4 rounded-lg"
+                >
+                  Exportar CSV
+                </Button>
               </div>
             </div>
-          </div>
 
-          {/* LADO DIREITO DA TOPBAR: Ações Globais (Sempre Visíveis!) */}
-          <div className="flex items-center gap-3">
-            {/* O BOTÃO SALVADOR: Nova Predição */}
-            <Button
-              onClick={onBack}
-              variant="text"
-              startIcon={<AddIcon />}
-              className="font-inter font-bold normal-case text-blue-600 hover:bg-blue-50 px-4"
-            >
-              Nova Predição
-            </Button>
+            {/* TABELA DE RESULTADOS */}
+            <div className="flex-1 overflow-y-auto custom-scrollbar min-h-0 bg-white">
+              {/* DICA EXTRA DE UX: No seu ResultsTable.tsx, certifique-se de que a tag <table>
+                  não esteja forçando um 'w-full' se não for necessário, ou defina larguras 
+                  máximas (max-w) para as colunas de texto para elas não esticarem ao infinito. 
+               */}
+              <ResultsTable
+                molecules={MOCK_DATA}
+                onRowClick={(mol) => setSelectedMolecule(mol)}
+                selectedMolId={selectedMolecule?.id || null}
+              />
+            </div>
 
-            {/* Divisor visual sutil */}
-            <div className="w-px h-6 bg-gray-200 mx-1"></div>
-
-            {/* Exportar */}
-            <Button
-              variant="outlined"
-              size="small"
-              startIcon={<DownloadIcon />}
-              className="normal-case font-bold border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 shadow-sm px-4"
-            >
-              Exportar CSV
-            </Button>
-          </div>
-
-        </div>
-
-        {/* Tabela de Resultados Ocupa todo o espaço central */}
-        <div className="flex-1 overflow-y-auto custom-scrollbar min-h-0 bg-white">
-          <ResultsTable
-            molecules={MOCK_DATA}
-            onRowClick={(mol) => setSelectedMolecule(mol)}
-            selectedMolId={selectedMolecule?.id || null}
-          />
-        </div>
+          </div> {/* Fim do Cartão Branco */}
+        </div> {/* Fim do Container de Respiro */}
       </main>
 
       {/* PAINEL 3: DIREITA (PREVIEW DA MOLÉCULA) */}
-      {selectedMolecule && (
-        <MoleculePreview
-          molecule={selectedMolecule}
-          onClose={() => setSelectedMolecule(null)}
-          onViewFullReport={(mol) => console.log("Navegar para relatório completo", mol)}
-        />
-      )}
+      <aside
+        className={`bg-white flex flex-col h-full shadow-[2px_0_8px_-4px_rgba(0,0,0,0.05)] z-20 shrink-0 overflow-hidden transition-all duration-300 ease-in-out border-r border-gray-200 ${selectedMolecule ? 'w-[420px]' : 'w-0'
+          }`}
+      >
 
+        {selectedMolecule && (
+          <MoleculePreview
+            molecule={selectedMolecule}
+            onClose={() => setSelectedMolecule(null)}
+            onViewFullReport={(mol) => console.log("Navegar para relatório completo", mol)}
+          />
+        )}
+
+      </aside>
     </div>
   );
 };

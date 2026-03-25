@@ -21,9 +21,9 @@ import { Header } from '../components/Header';
 type Phase = 'input' | 'loading' | 'results';
 
 const PredictPage = () => {
-  const [phase, setPhase] = useState<Phase>('input');
+  const [phase, setPhase] = useState<Phase>('results');
 
-  const [activeTab, setActiveTab] = useState<'smiles' | 'file'>('smiles');
+  const [activeTab, setActiveTab] = useState<'smiles' | 'file'>('file');
   const [smilesInput, setSmilesInput] = useState('');
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
 
