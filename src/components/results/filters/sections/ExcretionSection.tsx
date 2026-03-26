@@ -16,17 +16,42 @@ export const ExcretionSection = ({ filters, count, updateFilter }: ExcretionSect
             <div className="space-y-6 pt-2">
                 <RangeSliderControl
                     label="Clearance Plasmático (CL)"
-                    value={filters.excretion.clPlasma}
-                    min={0} max={150} step={1} unit="mL/min/kg"
-                    onChange={(newVal) => updateFilter('excretion', 'clPlasma', newVal)}
-                    onReset={() => updateFilter('excretion', 'clPlasma', [0, 150])}
+                    min={0}
+                    max={150}
+                    step={1}
+                    unit="mL/min/kg"
+                    value={filters.excretion.clPlasma.value}
+                    isActive={filters.excretion.clPlasma.active}
+                    onChange={(newVal) => updateFilter('excretion', 'clPlasma', {
+                        ...filters.excretion.clPlasma,
+                        value: newVal
+                    })}
+                    onActiveChange={(newActive) => updateFilter('excretion', 'clPlasma', {
+                        ...filters.excretion.clPlasma,
+                        active: newActive
+                    })}
+                    onReset={() => updateFilter('excretion', 'clPlasma', {
+                        value: [0, 150],
+                        active: true
+                    })}
                 />
                 <RangeSliderControl
                     label="Tempo de Meia-vida (T1/2)"
-                    value={filters.excretion.tHalf}
+                    value={filters.excretion.tHalf.value}
+                    isActive={filters.excretion.tHalf.active}
                     min={0} max={48} step={0.5} unit="h"
-                    onChange={(newVal) => updateFilter('excretion', 'tHalf', newVal)}
-                    onReset={() => updateFilter('excretion', 'tHalf', [0, 48])}
+                    onChange={(newVal) => updateFilter('excretion', 'tHalf', {
+                        ...filters.excretion.tHalf,
+                        value: newVal
+                    })}
+                    onActiveChange={(newActive) => updateFilter('excretion', 'tHalf', {
+                        ...filters.excretion.tHalf,
+                        active: newActive
+                    })}
+                    onReset={() => updateFilter('excretion', 'tHalf', {
+                        value: [0, 48],
+                        active: true
+                    })}
                 />
             </div>
         </FilterSection>

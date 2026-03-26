@@ -1,18 +1,26 @@
 // src/types/filters.ts
 
+// 1. O TIPO GENÉRICO MÁGICO
+// Ele encapsula qualquer valor (seja array, numero, string) adicionando o estado 'active'
+export type ToggleableFilter<T> = {
+  value: T;
+  active: boolean;
+};
+
+// 2. AS INTERFACES ATUALIZADAS
 export interface PhysioChemicalFilters {
-  mw: [number, number];       // Peso Molecular (ex: 0 a 1000 Da)
-  tpsa: [number, number];     // TPSA (ex: 0 a 200 Å²)
-  logp: [number, number];     // LogP (ex: -5 a 10)
+  mw: ToggleableFilter<[number, number]>;     // Peso Molecular
+  tpsa: ToggleableFilter<[number, number]>;   // TPSA
+  logp: ToggleableFilter<[number, number]>;   // LogP
 }
 
-type SliderConfig = {
+export type SliderConfig = {
   label: string;
-  field: 'mw' | 'logp' | 'tpsa'; // Isso garante que você não digite o nome do campo errado
+  field: keyof PhysioChemicalFilters; // Garante que o campo exista na interface!
   min: number;
   max: number;
-  step?: number; // O sinal de interrogação (?) diz que é opcional
-  unit?: string; // Opcional
+  step?: number; 
+  unit?: string; 
 };
 
 export const PFQ_FILTERS_CONFIG: SliderConfig[] = [
@@ -22,41 +30,41 @@ export const PFQ_FILTERS_CONFIG: SliderConfig[] = [
 ] as const;
 
 export interface MedChemFilters {
-  lipinski: boolean;          // true = Apenas os que passam na Regra dos 5
-  pfizer: boolean;            // true = Apenas os que passam na regra da Pfizer (3/75)
-  qed: [number, number];      // Quantitative Estimate of Druglikeness (ex: 0.0 a 1.0)
+  lipinski: boolean;          // Booleans já são chaves liga/desliga por natureza
+  pfizer: boolean;            
+  qed: ToggleableFilter<[number, number]>; // QED é um slider, então usa o Toggleable
 }
 
 export interface AbsorptionFilters {
-  absorptionPercent: [number, number]; // Percentual de absorção (ex: 0 a 100%)
-  caco2: string[];                     // Endpoints: ['Alta', 'Média', 'Baixa']
-  pgpInhibitor: string[];              // Endpoints: ['Sim', 'Não']
+  absorptionPercent: ToggleableFilter<[number, number]>; 
+  caco2: string[];                    // Mantemos como array simples para os botões segmentados
+  pgpInhibitor: string[];             
 }
 
 export interface DistributionFilters {
-  bbb: string[];              // Blood-Brain Barrier (ex: ['Alta', 'Média', 'Baixa'])
-  ppb: [number, number];      // Plasma Protein Binding (ex: 0 a 100%)
-  fu: [number, number];       // Fraction unbound (ex: 0.0 a 1.0)
+  bbb: string[];              
+  ppb: ToggleableFilter<[number, number]>;      
+  fu: ToggleableFilter<[number, number]>;       
 }
 
 export interface MetabolismFilters {
-  cyp2d6Substrate: string[];  // ['Sim', 'Não']
-  cyp1a2Substrate: string[];  // ['Sim', 'Não']
-  cyp3a4Substrate: string[];  // ['Sim', 'Não']
+  cyp2d6Substrate: string[];  
+  cyp1a2Substrate: string[];  
+  cyp3a4Substrate: string[];  
 }
 
 export interface ExcretionFilters {
-  clPlasma: [number, number]; // Clearance plasmático
-  tHalf: [number, number];    // Tempo de meia-vida (T1/2) em horas
+  clPlasma: ToggleableFilter<[number, number]>; 
+  tHalf: ToggleableFilter<[number, number]>;    
 }
 
 export interface ToxicityFilters {
-  ames: string[];             // ['Negativo', 'Positivo']
-  hepato: string[];           // Human Hepatotoxicity: ['Seguro', 'Atenção', 'Tóxico']
-  herg: string[];             // hERG Blockers: ['Baixo', 'Médio', 'Alto']
+  ames: string[];             
+  hepato: string[];           
+  herg: string[];             
 }
 
-// O TIPO MESTRE (Agrupa todos os 7)
+// O TIPO MESTRE
 export interface AdmetFilters {
   pfq: PhysioChemicalFilters;
   medchem: MedChemFilters;
@@ -67,35 +75,36 @@ export interface AdmetFilters {
   toxicity: ToxicityFilters;
 }
 
+// 3. O ESTADO DEFAULT (Tudo Desligado Limpo!)
 export const defaultFilters: AdmetFilters = {
   pfq: {
-    mw: [0, 1000],
-    tpsa: [0, 200],
-    logp: [-5, 10],
+    mw: { value: [0, 1000], active: false },
+    tpsa: { value: [0, 200], active: false },
+    logp: { value: [-5, 10], active: false },
   },
   medchem: {
-    lipinski: false, // false = não está filtrando obrigatoriamente
+    lipinski: false,
     pfizer: false,
-    qed: [0, 1],
+    qed: { value: [0, 1], active: false },
   },
   absorption: {
-    absorptionPercent: [0, 100],
+    absorptionPercent: { value: [0, 100], active: false },
     caco2: ['Alta', 'Média', 'Baixa'], 
-    pgpInhibitor: ['Sim', 'Não'],
+    pgpInhibitor: ['Sim', 'Não', 'Qualquer'], // Atualizado pro nosso padrão
   },
   distribution: {
     bbb: ['Alta', 'Média', 'Baixa'],
-    ppb: [0, 100],
-    fu: [0, 100],
+    ppb: { value: [0, 100], active: false },
+    fu: { value: [0, 100], active: false },
   },
   metabolism: {
-    cyp2d6Substrate: ['Sim', 'Não'],
-    cyp1a2Substrate: ['Sim', 'Não'],
-    cyp3a4Substrate: ['Sim', 'Não'],
+    cyp2d6Substrate: ['Sim', 'Não', 'Qualquer'],
+    cyp1a2Substrate: ['Sim', 'Não', 'Qualquer'],
+    cyp3a4Substrate: ['Sim', 'Não', 'Qualquer'],
   },
   excretion: {
-    clPlasma: [0, 100], // Ajuste a escala conforme a sua base de dados real
-    tHalf: [0, 48],     // Ex: 0 a 48 horas
+    clPlasma: { value: [0, 150], active: false }, 
+    tHalf: { value: [0, 48], active: false },    
   },
   toxicity: {
     ames: ['Negativo', 'Positivo'],
@@ -104,6 +113,7 @@ export const defaultFilters: AdmetFilters = {
   }
 };
 
+// 4. PRESETS (Ligando as chaves automaticamente)
 export const filterPresets: Record<string, AdmetFilters> = {
   'default': defaultFilters,
   
@@ -115,8 +125,9 @@ export const filterPresets: Record<string, AdmetFilters> = {
     },
     pfq: {
       ...defaultFilters.pfq,
-      mw: [0, 500],
-      logp: [-5, 5],
+      // No preset, nós ativamos a chave e setamos o valor!
+      mw: { value: [0, 500], active: true },
+      logp: { value: [-5, 5], active: true },
     }
   },
 
@@ -129,7 +140,7 @@ export const filterPresets: Record<string, AdmetFilters> = {
     },
     absorption: {
       ...defaultFilters.absorption,
-      caco2: ['Alta'], // Exige boa permeabilidade
+      caco2: ['Alta'], 
     }
   }
 };

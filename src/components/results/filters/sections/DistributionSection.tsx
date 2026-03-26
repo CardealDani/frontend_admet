@@ -38,8 +38,43 @@ export const DistributionSection = ({ filters, count, updateFilter, toggleArrayF
                     </div>
                 </div>
 
-                <RangeSliderControl label="Ligação a Proteínas (PPB)" value={filters.distribution.ppb} min={0} max={100} step={1} unit="%" onChange={(newVal) => updateFilter('distribution', 'ppb', newVal)} onReset={() => updateFilter('distribution', 'ppb', [0, 100])} />
-                <RangeSliderControl label="Fração Livre no Plasma (Fu)" value={filters.distribution.fu} min={0} max={100} step={1} unit="%" onChange={(newVal) => updateFilter('distribution', 'fu', newVal)} onReset={() => updateFilter('distribution', 'fu', [0, 100])} />
+                <RangeSliderControl
+                    label="Ligação a Proteínas (PPB)"
+                    value={filters.distribution.ppb.value}
+                    isActive={filters.distribution.ppb.active}
+                    min={0} max={100} step={1} unit="%"
+                    onChange={(newVal) => updateFilter('distribution', 'ppb', {
+                        ...filters.distribution.ppb,
+                        value: newVal
+                    })}
+                    onActiveChange={(newActive) => updateFilter('distribution', 'ppb', {
+                        ...filters.distribution.ppb,
+                        active: newActive
+                    })}
+                    onReset={() => updateFilter('distribution', 'ppb', {
+                        value: [0, 100],
+                        active: true
+                    })}
+                />
+
+                <RangeSliderControl
+                    label="Fração Livre no Plasma (Fu)"
+                    value={filters.distribution.fu.value}
+                    isActive={filters.distribution.fu.active}
+                    min={0} max={100} step={1} unit="%"
+                    onChange={(newVal) => updateFilter('distribution', 'fu', {
+                        ...filters.distribution.fu,
+                        value: newVal
+                    })}
+                    onActiveChange={(newActive) => updateFilter('distribution', 'fu', {
+                        ...filters.distribution.fu,
+                        active: newActive
+                    })}
+                    onReset={() => updateFilter('distribution', 'fu', {
+                        value: [0, 100],
+                        active: true
+                    })}
+                />
 
             </div>
         </FilterSection>

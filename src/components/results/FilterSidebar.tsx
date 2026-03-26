@@ -65,104 +65,98 @@ const FilterSidebar = ({ isSidebarOpen, toggleSidebar }: FilterSidebarProps) => 
   };
 
 
-  // ==========================================
-  // LÓGICA INTELIGENTE DE CONTAGEM DE BADGES
-  // ==========================================
+  // LÓGICA FINAL DE CONTAGEM (Inteligente)
   const countActiveFilters = (currentSection: any, defaultSection: any): number => {
     let count = 0;
-
+    
     Object.keys(currentSection).forEach(key => {
       const cVal = currentSection[key];
       const dVal = defaultSection[key];
 
-      if (Array.isArray(cVal) && Array.isArray(dVal)) {
-
-        // 1. É um Slider? (Array de Números, ex: [0, 100]) -> A ordem importa!
-        if (typeof dVal[0] === 'number') {
-          if (cVal[0] !== dVal[0] || cVal[1] !== dVal[1]) {
-            count++;
-          }
-        }
-        // 2. É uma Categoria? (Array de Strings, ex: ['Alta', 'Baixa']) -> A ordem NÃO importa!
-        else {
-          if (cVal.length !== dVal.length) {
-            count++; // Se a quantidade de itens mudou, com certeza o filtro tá ativo
-          } else {
-            // Se tem a mesma quantidade, checa se os itens são os mesmos (ignorando a ordem)
-            const isDifferent = cVal.some((item: string) => !dVal.includes(item));
-            if (isDifferent) {
-              count++;
-            }
-          }
-        }
-
-      } else if (cVal !== dVal) {
-        // Booleanos, Strings diretas ou outros tipos (ex: Lipinski: true)
+      // 1. Se for um ToggleableFilter (tem a propriedade 'active')
+      if (cVal && typeof cVal === 'object' && 'active' in cVal) {
+        if (cVal.active) count++;
+      } 
+      // 2. Se for um Array categórico (ex: caco2)
+      else if (Array.isArray(cVal) && Array.isArray(dVal)) {
+        if (cVal.length !== dVal.length) count++;
+      } 
+      // 3. Se for um Booleano direto (ex: lipinski)
+      else if (cVal !== dVal) {
         count++;
       }
     });
-
+    
     return count;
   };
 
-  // Contagem por Acordeão (Seção)
-  // Nota: A seção Físico-Química da sua UI junta o state 'pfq' e 'medchem'
-  const countPfq = countActiveFilters(filters.pfq, defaultFilters.pfq) + countActiveFilters(filters.medchem, defaultFilters.medchem);
-  const countAbs = countActiveFilters(filters.absorption, defaultFilters.absorption);
-  const countDist = countActiveFilters(filters.distribution, defaultFilters.distribution);
-  const countMet = countActiveFilters(filters.metabolism, defaultFilters.metabolism);
-  const countExc = countActiveFilters(filters.excretion, defaultFilters.excretion);
-  const countTox = countActiveFilters(filters.toxicity, defaultFilters.toxicity);
+    // Contagem por Acordeão (Seção)
+    // Nota: A seção Físico-Química da sua UI junta o state 'pfq' e 'medchem'
+    const countPfq = countActiveFilters(filters.pfq, defaultFilters.pfq) + countActiveFilters(filters.medchem, defaultFilters.medchem);
+    const countAbs = countActiveFilters(filters.absorption, defaultFilters.absorption);
+    const countDist = countActiveFilters(filters.distribution, defaultFilters.distribution);
+    const countMet = countActiveFilters(filters.metabolism, defaultFilters.metabolism);
+    const countExc = countActiveFilters(filters.excretion, defaultFilters.excretion);
+    const countTox = countActiveFilters(filters.toxicity, defaultFilters.toxicity);
 
-  // Contagem Total para o Ícone Principal do Header
-  const totalActiveFilters = countPfq + countAbs + countDist + countMet + countExc + countTox;
+    // Contagem Total para o Ícone Principal do Header
+    const totalActiveFilters = countPfq + countAbs + countDist + countMet + countExc + countTox;
 
 // ==========================================
   // LÓGICA DE REGRAS MEDCHEM (INTERSEÇÃO)
   // ==========================================
   
-  const handleLipinskiToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
+ const handleLipinskiToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
     const isLipinski = e.target.checked;
     
     setFilters(prev => {
-      const isPfizer = prev.medchem.pfizer; // Olha o estado atual da outra regra!
+      const isPfizer = prev.medchem.pfizer; 
 
       return {
         ...prev,
         medchem: { ...prev.medchem, lipinski: isLipinski },
         pfq: {
           ...prev.pfq,
-          // Peso Molecular só sofre influência do Lipinski
-          mw: isLipinski ? [0, 500] : [0, 1000],
-          // LogP sofre influência dos dois. A regra da Pfizer (Máx 3) é mais restrita que Lipinski (Máx 5).
-          logp: isPfizer ? [-5, 3] : (isLipinski ? [-5, 5] : [-5, 10])
+          // Peso Molecular: Atualizamos o valor E ativamos a chave do slider!
+          mw: {
+            value: isLipinski ? [0, 500] : [0, 1000],
+            active: isLipinski // Liga o slider se a regra estiver On
+          },
+          // LogP: Se qualquer uma das duas regras estiver ligada, o slider fica ativo
+          logp: {
+            value: isPfizer ? [-5, 3] : (isLipinski ? [-5, 5] : [-5, 10]),
+            active: isPfizer || isLipinski 
+          }
         }
       };
     });
-    setPresetName('custom');
   };
 
   const handlePfizerToggle = (e: React.ChangeEvent<HTMLInputElement>) => {
     const isPfizer = e.target.checked;
     
     setFilters(prev => {
-      const isLipinski = prev.medchem.lipinski; // Olha o estado atual da outra regra!
+      const isLipinski = prev.medchem.lipinski; 
 
       return {
         ...prev,
         medchem: { ...prev.medchem, pfizer: isPfizer },
         pfq: {
           ...prev.pfq,
-          // TPSA só sofre influência da Pfizer
-          tpsa: isPfizer ? [75, 200] : [0, 200],
-          // Mesma lógica de colisão para o LogP
-          logp: isPfizer ? [-5, 3] : (isLipinski ? [-5, 5] : [-5, 10])
+          // TPSA: Atualizamos o valor E ativamos o slider
+          tpsa: {
+            value: isPfizer ? [75, 200] : [0, 200],
+            active: isPfizer
+          },
+          // LogP Colisão (Mesma regra de cima)
+          logp: {
+            value: isPfizer ? [-5, 3] : (isLipinski ? [-5, 5] : [-5, 10]),
+            active: isPfizer || isLipinski
+          }
         }
       };
     });
-    setPresetName('custom');
   };
-
 
   return (
     <div className="w-full flex flex-col h-full animate-fade-in bg-gray-50">

@@ -18,19 +18,35 @@ export const PfqMedChemSection = ({ filters, count, updateFilter, handleLipinski
     return (
         <FilterSection title="Físico-Química / MedChem" icon={<ScienceIcon fontSize="small" className="text-blue-500" />} defaultExpanded={true} badgeCount={count > 0 ? count : undefined}>
             <div className="space-y-4 pt-2">
-                {PFQ_FILTERS_CONFIG.map((config) => (
-                    <RangeSliderControl
-                        key={config.field}
-                        label={config.label}
-                        value={filters.pfq[config.field] as [number, number]}
-                        min={config.min}
-                        max={config.max}
-                        step={config.step}
-                        unit={config.unit}
-                        onChange={(newVal) => updateFilter('pfq', config.field, newVal)}
-                        onReset={() => updateFilter('pfq', config.field, [config.min, config.max])}
-                    />
-                ))}
+               {PFQ_FILTERS_CONFIG.map((config) => {
+    // Pegamos a propriedade atual (mw, logp ou tpsa) que já é um objeto { value, active }
+    const currentFilter = filters.pfq[config.field]; 
+
+    return (
+        <RangeSliderControl
+            key={config.field}
+            label={config.label}
+            value={currentFilter.value}
+            isActive={currentFilter.active}
+            min={config.min}
+            max={config.max}
+            step={config.step}
+            unit={config.unit}
+            onChange={(newVal) => updateFilter('pfq', config.field, { 
+                ...currentFilter, 
+                value: newVal 
+            })}
+            onActiveChange={(newActive) => updateFilter('pfq', config.field, { 
+                ...currentFilter, 
+                active: newActive 
+            })}
+            onReset={() => updateFilter('pfq', config.field, { 
+                value: [config.min, config.max], 
+                active: true 
+            })}
+        />
+    );
+})}
 
                 <div className="pt-4 border-t border-gray-100 mt-4">
                     <Typography className="font-inter text-[10px] font-extrabold text-gray-400 uppercase tracking-wider mb-3">

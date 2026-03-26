@@ -1,44 +1,33 @@
 // src/components/results/filters/RangeSliderControl.tsx
-import React, { useState, useEffect } from 'react';
-import { Typography, Slider, IconButton, Tooltip } from '@mui/material';
+import { useState, useEffect } from 'react';
+import { Typography, Slider, IconButton, Tooltip, Switch } from '@mui/material';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 
 interface RangeSliderControlProps {
   label: string;
-  value: [number, number]; // Valor GLOBAL (vem do cérebro)
+  value: [number, number]; // Valor GLOBAL (do cérebro)
   min: number;
   max: number;
+  isActive: boolean; // NOVO: Estado de ativação
   step?: number;
   unit?: string;
-  onChange: (newValue: [number, number]) => void; // Atualiza o GLOBAL
+  onChange: (newValue: [number, number]) => void;
   onReset: () => void;
+  onActiveChange: (isActive: boolean) => void; // NOVO: Callback de ativação
 }
 
-export const RangeSliderControl = ({ label, value, min, max, step = 1, unit, onChange, onReset }: RangeSliderControlProps) => {
-  // O Estado Local controla a animação suave e os inputs sem travar a tela inteira
+export const RangeSliderControl = ({ label, value, min, max, isActive, step = 1, unit, onChange, onReset, onActiveChange }: RangeSliderControlProps) => {
   const [localRange, setLocalRange] = useState<[number, number]>(value);
   const [localMinInput, setLocalMinInput] = useState<string | number>(value[0]);
   const [localMaxInput, setLocalMaxInput] = useState<string | number>(value[1]);
 
-  // Sincroniza o local com o global caso venha uma ordem de fora (ex: botão de Reset ou Preset)
   useEffect(() => {
     setLocalRange(value);
     setLocalMinInput(value[0]);
     setLocalMaxInput(value[1]);
   }, [value[0], value[1]]);
 
-  // ==========================================
-  // FUNÇÕES DE INPUT (Textos)
-  // ==========================================
-  const handleMinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setLocalMinInput(e.target.value);
-  };
-
-  const handleMaxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setLocalMaxInput(e.target.value);
-  };
-
-  // Quando tira o foco do input, valida e manda para o Global
+  // Correção final no Input
   const finalizeInputChanges = () => {
     let finalMin = Number(localMinInput);
     let finalMax = Number(localMaxInput);
@@ -58,61 +47,93 @@ export const RangeSliderControl = ({ label, value, min, max, step = 1, unit, onC
     setLocalMinInput(finalMin);
     setLocalMaxInput(finalMax);
     setLocalRange([finalMin, finalMax]);
-    
-    // Manda para o cérebro
     onChange([finalMin, finalMax]);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') finalizeInputChanges();
-  };
-
   const isModified = value[0] !== min || value[1] !== max;
+  
+  // Cores visuais baseadas no estado ativo/inativo
+  const textColor = isActive ? 'text-gray-700' : 'text-gray-400';
+  const inputBg = isActive ? 'bg-blue-50' : 'bg-gray-100';
+  const inputTextColor = isActive ? 'text-blue-600' : 'text-gray-500';
 
   return (
-    <div className="mb-5 px-1 group">
-      <div className="flex justify-between items-end mb-1">
+    <div className="mb-5 px-1 group transition-all duration-200">
+      <div className="flex justify-between items-center mb-1.5 gap-2">
         
-        <div className="flex items-center gap-1">
-          <Typography className="font-inter font-medium text-sm text-gray-700">
+        {/* LADO ESQUERDO: SWITCH + LABEL */}
+        <div className="flex items-center gap-1.5 min-w-0">
+          <Tooltip title={isActive ? "Desativar este filtro" : "Ativar este filtro"} placement="top">
+            <Switch 
+              size="small" 
+              checked={isActive} 
+              onChange={(e) => onActiveChange(e.target.checked)}
+              sx={{ 
+                width: 34, height: 20, padding: 0,
+                '& .MuiSwitch-switchBase': { 
+                  padding: '2px', 
+                  color: '#fff', // Bolinha SEMPRE branca
+                  '&.Mui-checked': { 
+                    transform: 'translateX(14px)', 
+                    color: '#fff', 
+                    '& + .MuiSwitch-track': { 
+                      backgroundColor: '#2563eb', // Azul premium quando ON
+                      opacity: 1, 
+                      border: 'none' 
+                    } 
+                  } 
+                },
+                '& .MuiSwitch-thumb': { 
+                  width: 16, 
+                  height: 16,
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.25)' // Sombra para a bolinha saltar do fundo
+                },
+                '& .MuiSwitch-track': { 
+                  borderRadius: 10, 
+                  backgroundColor: '#cbd5e1', // Cinza sólido (slate-300) quando OFF. Zero transparência!
+                  opacity: 1, 
+                },
+              }}
+            />
+          </Tooltip>
+          <Typography className={`font-inter font-medium text-xs whitespace-nowrap overflow-hidden text-ellipsis ${textColor}`}>
             {label}
           </Typography>
-          {isModified && (
+          {isActive && isModified && (
             <Tooltip title="Restaurar padrão" placement="top">
               <IconButton size="small" onClick={onReset} className="p-0.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors animate-fade-in">
-                <RestartAltIcon sx={{ fontSize: 16 }} />
+                <RestartAltIcon sx={{ fontSize: 14 }} />
               </IconButton>
             </Tooltip>
           )}
         </div>
 
-        <div className="flex items-center font-inter text-xs font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-lg border border-blue-100/50 transition-all">
+        {/* LADO DIREITO: BADGE COM INPUTS */}
+        <div className={`flex items-center font-inter text-[11px] font-bold ${inputTextColor} ${inputBg} px-1.5 py-0.5 rounded-lg border border-gray-100/50 transition-all shrink-0`}>
           <input
             type="text"
             value={localMinInput}
-            onChange={handleMinChange}
+            onChange={(e) => setLocalMinInput(e.target.value)}
             onBlur={finalizeInputChanges}
-            onKeyDown={handleKeyDown}
-            className="w-[42px] px-1 py-0.5 bg-transparent text-center rounded outline-none transition-all cursor-text hover:bg-blue-100/60 focus:bg-white focus:shadow-sm focus:ring-1 focus:ring-blue-400 focus:text-blue-900"
+            onKeyDown={(e) => e.key === 'Enter' && finalizeInputChanges()}
+            disabled={!isActive} // DESABILITADO SE INATIVO
+            className="w-[38px] px-1 py-0.5 bg-transparent text-center rounded outline-none transition-all cursor-text [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none focus:bg-white focus:ring-1 focus:ring-blue-300 disabled:cursor-not-allowed"
           />
-          <span className="text-blue-400/60 font-normal mx-0.5">-</span>
+          <span className="text-gray-300 font-normal mx-0.5">-</span>
           <input
             type="text"
             value={localMaxInput}
-            onChange={handleMaxChange}
+            onChange={(e) => setLocalMaxInput(e.target.value)}
             onBlur={finalizeInputChanges}
-            onKeyDown={handleKeyDown}
-            className="w-[42px] px-1 py-0.5 bg-transparent text-center rounded outline-none transition-all cursor-text hover:bg-blue-100/60 focus:bg-white focus:shadow-sm focus:ring-1 focus:ring-blue-400 focus:text-blue-900"
+            onKeyDown={(e) => e.key === 'Enter' && finalizeInputChanges()}
+            disabled={!isActive} // DESABILITADO SE INATIVO
+            className="w-[38px] px-1 py-0.5 bg-transparent text-center rounded outline-none transition-all cursor-text [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none focus:bg-white focus:ring-1 focus:ring-blue-300 disabled:cursor-not-allowed"
           />
           {unit && <span className="text-[10px] text-gray-400 font-normal ml-1">{unit}</span>}
         </div>
       </div>
       
-      {/* MÁGICA DA PERFORMANCE AQUI:
-        1. O 'value' lido pelo slider é o 'localRange' (atualiza a 60fps sem travar a tela).
-        2. O 'onChange' só altera os states locais.
-        3. O 'onChangeCommitted' dispara o 'onChange' global APENAS quando o mouse solta a bolinha!
-      */}
+      {/* Slider Físico */}
       <Slider 
         value={localRange} 
         onChange={(_, v) => {
@@ -121,17 +142,15 @@ export const RangeSliderControl = ({ label, value, min, max, step = 1, unit, onC
           setLocalMinInput(vals[0]);
           setLocalMaxInput(vals[1]);
         }} 
-        onChangeCommitted={(_, v) => {
-          // Avisa o estado global (FilterSidebar) só no final do movimento
-          onChange(v as [number, number]);
-        }}
+        onChangeCommitted={(_, v) => onChange(v as [number, number])}
         valueLabelDisplay="auto"
         min={min} 
         max={max} 
         step={step} 
         disableSwap
+        disabled={!isActive} // DESABILITADO SE INATIVO
         size="small" 
-        sx={{ color: '#2563eb', padding: '10px 0' }} 
+        sx={{ color: isActive ? '#2563eb' : '#e2e8f0', padding: '10px 0', '& .MuiSlider-thumb': { backgroundColor: isActive ? '#2563eb' : '#cbd5e1', border: isActive ? '2px solid #fff' : '2px solid #e2e8f0' } }} 
       />
     </div>
   );
