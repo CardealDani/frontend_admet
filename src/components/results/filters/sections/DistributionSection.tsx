@@ -1,8 +1,12 @@
 
-import { Typography } from '@mui/material';
 import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined';
+import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
+import WarningRoundedIcon from '@mui/icons-material/WarningRounded';
+import CancelRoundedIcon from '@mui/icons-material/CancelRounded';
+
 import { FilterSection } from '../FilterSection';
 import { RangeSliderControl } from '../RangeSliderControl';
+import { FilterButtonGroup, type FilterOption } from '../FilterButtonGroup';
 import type { AdmetFilters } from '../../../../types/filters';
 
 interface DistributionSectionProps {
@@ -13,31 +17,32 @@ interface DistributionSectionProps {
 }
 
 export const DistributionSection = ({ filters, count, updateFilter, toggleArrayFilter }: DistributionSectionProps) => {
+
+    // Configuração do BBB (Alvo Periférico)
+    // Mantemos os IDs 'Baixa', 'Média', 'Alta' para o estado, mas exibimos os Labels da documentação
+    const bbbOptions: FilterOption[] = [
+        { id: 'Baixa', label: 'Excelente', subtitle: '(0 - 0.3)', color: 'success', icon: CheckCircleRoundedIcon },
+        { id: 'Média', label: 'Médio', subtitle: '(0.3 - 0.7)', color: 'warning', icon: WarningRoundedIcon },
+        { id: 'Alta', label: 'Ruim', subtitle: '(0.7 - 1.0)', color: 'error', icon: CancelRoundedIcon }
+    ];
+
     return (
-        <FilterSection title="Distribuição" icon={<LocalShippingOutlinedIcon fontSize="small" className="text-gray-500" />} badgeCount={count > 0 ? count : undefined}>
+        <FilterSection
+            title="Distribuição"
+            icon={<LocalShippingOutlinedIcon fontSize="small" className="text-gray-500" />}
+            badgeCount={count > 0 ? count : undefined}
+        >
             <div className="space-y-6 pt-2">
 
-                <div>
-                    <Typography className="font-inter text-xs font-semibold text-gray-700 mb-2">Permeabilidade BBB (Alvo Periférico)</Typography>
-                    <div className="flex w-full bg-slate-50/50 p-1 rounded-[10px] border border-slate-200/50 shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]">
-                        {['Alta', 'Média', 'Baixa'].map((lvl) => {
-                            const isActive = filters.distribution.bbb.includes(lvl);
-                            let colorClasses = 'text-slate-500 hover:bg-slate-100/80 hover:text-slate-700';
+                {/* 1. Permeabilidade BBB (Componente Universal) */}
+                <FilterButtonGroup
+                    title="Permeabilidade BBB (Alvo Periférico)"
+                    options={bbbOptions}
+                    activeValues={filters.distribution.bbb}
+                    onToggle={(id) => toggleArrayFilter('distribution', 'bbb', id)}
+                />
 
-                            if (isActive) {
-                                if (lvl === 'Alta') colorClasses = 'bg-rose-50/80 text-rose-700 border-rose-100 shadow-sm';
-                                if (lvl === 'Média') colorClasses = 'bg-amber-50/80 text-amber-700 border-amber-100 shadow-sm';
-                                if (lvl === 'Baixa') colorClasses = 'bg-emerald-50/80 text-emerald-700 border-emerald-100 shadow-sm';
-                            }
-                            return (
-                                <button key={lvl} onClick={() => toggleArrayFilter('distribution', 'bbb', lvl)} className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all duration-200 border border-transparent ${colorClasses}`}>
-                                    {lvl}
-                                </button>
-                            )
-                        })}
-                    </div>
-                </div>
-
+                {/* 2. Slider PPB */}
                 <RangeSliderControl
                     label="Ligação a Proteínas (PPB)"
                     value={filters.distribution.ppb.value}
@@ -57,6 +62,7 @@ export const DistributionSection = ({ filters, count, updateFilter, toggleArrayF
                     })}
                 />
 
+                {/* 3. Slider Fu */}
                 <RangeSliderControl
                     label="Fração Livre no Plasma (Fu)"
                     value={filters.distribution.fu.value}

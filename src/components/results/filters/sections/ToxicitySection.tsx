@@ -1,7 +1,10 @@
-
-import { Typography } from '@mui/material';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import CheckCircleRoundedIcon from '@mui/icons-material/CheckCircleRounded';
+import WarningRoundedIcon from '@mui/icons-material/WarningRounded';
+import CancelRoundedIcon from '@mui/icons-material/CancelRounded';
+
 import { FilterSection } from '../FilterSection';
+import { FilterButtonGroup, type FilterOption } from '../FilterButtonGroup';
 import type { AdmetFilters } from '../../../../types/filters';
 
 interface ToxicitySectionProps {
@@ -12,54 +15,57 @@ interface ToxicitySectionProps {
 
 export const ToxicitySection = ({ filters, count, toggleArrayFilter }: ToxicitySectionProps) => {
 
-    // Função auxiliar para renderizar botões segmentados de toxicidade
-    const renderToxButtons = (field: keyof AdmetFilters['toxicity'], options: string[], colors: Record<string, string>) => (
-        <div className="flex w-full bg-slate-50/50 p-1 rounded-[10px] border border-slate-200/50 shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]">
-            {options.map((lvl) => {
-                const isActive = filters.toxicity[field].includes(lvl);
-                let colorClasses = 'text-slate-500 hover:bg-slate-100/80 hover:text-slate-700';
+    // 1. Configuração do AMES (Mutagenicidade)
+    const amesOptions: FilterOption[] = [
+        { id: 'Seguro',  label: 'Seguro',     subtitle: '(0 - 0.3)',   color: 'success', icon: CheckCircleRoundedIcon },
+        { id: 'Atenção', label: 'Atenção',    subtitle: '(0.3 - 0.7)', color: 'warning', icon: WarningRoundedIcon },
+        { id: 'Tóxico',  label: 'Mutagênico', subtitle: '(0.7 - 1.0)', color: 'error',   icon: CancelRoundedIcon }
+    ];
 
-                if (isActive) {
-                    colorClasses = colors[lvl] || 'bg-slate-200 text-slate-800';
-                }
-                return (
-                    <button key={lvl} onClick={() => toggleArrayFilter('toxicity', field, lvl)} className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all duration-200 border border-transparent ${colorClasses}`}>
-                        {lvl}
-                    </button>
-                )
-            })}
-        </div>
-    );
+    // 2. Configuração do hERG (Cardiotoxicidade)
+    const hergOptions: FilterOption[] = [
+        { id: 'Seguro',  label: 'Seguro',        subtitle: '(0 - 0.3)',   color: 'success', icon: CheckCircleRoundedIcon },
+        { id: 'Atenção', label: 'Atenção',       subtitle: '(0.3 - 0.7)', color: 'warning', icon: WarningRoundedIcon },
+        { id: 'Tóxico',  label: 'Cardiotóxico',  subtitle: '(0.7 - 1.0)', color: 'error',   icon: CancelRoundedIcon }
+    ];
+
+    // 3. Configuração da Hepatotoxicidade
+    const hepatoOptions: FilterOption[] = [
+        { id: 'Seguro',  label: 'Seguro',        subtitle: '(0 - 0.3)',   color: 'success', icon: CheckCircleRoundedIcon },
+        { id: 'Atenção', label: 'Atenção',       subtitle: '(0.3 - 0.7)', color: 'warning', icon: WarningRoundedIcon },
+        { id: 'Tóxico',  label: 'Hepatotóxico',  subtitle: '(0.7 - 1.0)', color: 'error',   icon: CancelRoundedIcon }
+    ];
 
     return (
-        <FilterSection title="Toxicidade" icon={<WarningAmberIcon fontSize="small" className="text-red-500" />} badgeType="error" defaultExpanded={true} badgeCount={count > 0 ? count : undefined}>
-            <div className="space-y-4 pt-2">
+        <FilterSection 
+            title="Toxicidade" 
+            icon={<WarningAmberIcon fontSize="small" className="text-red-500" />} 
+            badgeType="error" 
+            defaultExpanded={true} 
+            badgeCount={count > 0 ? count : undefined}
+        >
+            <div className="space-y-6 pt-2">
 
-                <div>
-                    <Typography className="font-inter text-xs font-semibold text-gray-700 mb-2">Mutagenicidade (AMES)</Typography>
-                    {renderToxButtons('ames', ['Negativo', 'Positivo'], {
-                        'Negativo': 'bg-emerald-50/80 text-emerald-700 border-emerald-100 shadow-sm',
-                        'Positivo': 'bg-rose-50/80 text-rose-700 border-rose-100 shadow-sm'
-                    })}
-                </div>
+                <FilterButtonGroup 
+                    title="Mutagenicidade (AMES)"
+                    options={amesOptions}
+                    activeValues={filters.toxicity.ames}
+                    onToggle={(id) => toggleArrayFilter('toxicity', 'ames', id)}
+                />
 
-                <div>
-                    <Typography className="font-inter text-xs font-semibold text-gray-700 mb-2">Bloqueio hERG (Cardiotoxicidade)</Typography>
-                    {renderToxButtons('herg', ['Baixo', 'Médio', 'Alto'], {
-                        'Baixo': 'bg-emerald-50/80 text-emerald-700 border-emerald-100 shadow-sm',
-                        'Médio': 'bg-amber-50/80 text-amber-700 border-amber-100 shadow-sm',
-                        'Alto': 'bg-rose-50/80 text-rose-700 border-rose-100 shadow-sm'
-                    })}
-                </div>
+                <FilterButtonGroup 
+                    title="Bloqueio hERG (Cardiotoxicidade)"
+                    options={hergOptions}
+                    activeValues={filters.toxicity.herg}
+                    onToggle={(id) => toggleArrayFilter('toxicity', 'herg', id)}
+                />
 
-                <div>
-                    <Typography className="font-inter text-xs font-semibold text-gray-700 mb-2">Hepatotoxicidade Humana</Typography>
-                    {renderToxButtons('hepato', ['Seguro', 'Atenção', 'Tóxico'], {
-                        'Seguro': 'bg-emerald-50/80 text-emerald-700 border-emerald-100 shadow-sm',
-                        'Atenção': 'bg-amber-50/80 text-amber-700 border-amber-100 shadow-sm',
-                        'Tóxico': 'bg-rose-50/80 text-rose-700 border-rose-100 shadow-sm'
-                    })}
-                </div>
+                <FilterButtonGroup 
+                    title="Hepatotoxicidade Humana"
+                    options={hepatoOptions}
+                    activeValues={filters.toxicity.hepato}
+                    onToggle={(id) => toggleArrayFilter('toxicity', 'hepato', id)}
+                />
 
             </div>
         </FilterSection>

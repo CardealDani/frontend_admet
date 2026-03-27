@@ -286,7 +286,7 @@ const FilterSidebar = ({ isSidebarOpen, toggleSidebar }: FilterSidebarProps) => 
             toggleArrayFilter={toggleArrayFilter}
           />
           <DistributionSection filters={filters} count={countDist} updateFilter={updateFilter} toggleArrayFilter={toggleArrayFilter} />
-          <MetabolismSection filters={filters} count={countMet} updateFilter={updateFilter} />
+          <MetabolismSection filters={filters} count={countMet} toggleArrayFilter={toggleArrayFilter} />
           <ExcretionSection filters={filters} count={countExc} updateFilter={updateFilter} />
           <ToxicitySection filters={filters} count={countTox} toggleArrayFilter={toggleArrayFilter} />
 

@@ -89,11 +89,11 @@ export const defaultFilters: AdmetFilters = {
   },
   absorption: {
     absorptionPercent: { value: [0, 100], active: false },
-    caco2: ['Alta', 'Média', 'Baixa'], 
-    pgpInhibitor: ['Sim', 'Não', 'Qualquer'], // Atualizado pro nosso padrão
+    caco2: ['Excelente', 'Ruim'], 
+    pgpInhibitor: ['Excelente', 'Médio', 'Ruim'],
   },
   distribution: {
-    bbb: ['Alta', 'Média', 'Baixa'],
+    bbb: ['Baixa', 'Média', 'Alta'],
     ppb: { value: [0, 100], active: false },
     fu: { value: [0, 100], active: false },
   },
@@ -106,10 +106,10 @@ export const defaultFilters: AdmetFilters = {
     clPlasma: { value: [0, 150], active: false }, 
     tHalf: { value: [0, 48], active: false },    
   },
-  toxicity: {
-    ames: ['Negativo', 'Positivo'],
+ toxicity: {
+    ames: ['Seguro', 'Atenção', 'Tóxico'],
     hepato: ['Seguro', 'Atenção', 'Tóxico'],
-    herg: ['Baixo', 'Médio', 'Alto'],
+    herg: ['Seguro', 'Atenção', 'Tóxico'],
   }
 };
 

@@ -5,15 +5,15 @@ import RestartAltIcon from '@mui/icons-material/RestartAlt';
 
 interface RangeSliderControlProps {
   label: string;
-  value: [number, number]; // Valor GLOBAL (do cérebro)
+  value: [number, number];
   min: number;
   max: number;
-  isActive: boolean; // NOVO: Estado de ativação
+  isActive: boolean;
   step?: number;
   unit?: string;
   onChange: (newValue: [number, number]) => void;
   onReset: () => void;
-  onActiveChange: (isActive: boolean) => void; // NOVO: Callback de ativação
+  onActiveChange: (isActive: boolean) => void;
 }
 
 export const RangeSliderControl = ({ label, value, min, max, isActive, step = 1, unit, onChange, onReset, onActiveChange }: RangeSliderControlProps) => {
@@ -27,7 +27,13 @@ export const RangeSliderControl = ({ label, value, min, max, isActive, step = 1,
     setLocalMaxInput(value[1]);
   }, [value[0], value[1]]);
 
-  // Correção final no Input
+  // Função auxiliar: Ativa o filtro automaticamente se o usuário tentar interagir
+  const autoActivate = () => {
+    if (!isActive) {
+      onActiveChange(true);
+    }
+  };
+
   const finalizeInputChanges = () => {
     let finalMin = Number(localMinInput);
     let finalMax = Number(localMaxInput);
@@ -47,12 +53,14 @@ export const RangeSliderControl = ({ label, value, min, max, isActive, step = 1,
     setLocalMinInput(finalMin);
     setLocalMaxInput(finalMax);
     setLocalRange([finalMin, finalMax]);
+    
+    // Se o usuário digitou algo válido, garante que o filtro seja ativado
+    autoActivate();
     onChange([finalMin, finalMax]);
   };
 
   const isModified = value[0] !== min || value[1] !== max;
   
-  // Cores visuais baseadas no estado ativo/inativo
   const textColor = isActive ? 'text-gray-700' : 'text-gray-400';
   const inputBg = isActive ? 'bg-blue-50' : 'bg-gray-100';
   const inputTextColor = isActive ? 'text-blue-600' : 'text-gray-500';
@@ -61,7 +69,6 @@ export const RangeSliderControl = ({ label, value, min, max, isActive, step = 1,
     <div className="mb-5 px-1 group transition-all duration-200">
       <div className="flex justify-between items-center mb-1.5 gap-2">
         
-        {/* LADO ESQUERDO: SWITCH + LABEL */}
         <div className="flex items-center gap-1.5 min-w-0">
           <Tooltip title={isActive ? "Desativar este filtro" : "Ativar este filtro"} placement="top">
             <Switch 
@@ -72,25 +79,24 @@ export const RangeSliderControl = ({ label, value, min, max, isActive, step = 1,
                 width: 34, height: 20, padding: 0,
                 '& .MuiSwitch-switchBase': { 
                   padding: '2px', 
-                  color: '#fff', // Bolinha SEMPRE branca
+                  color: '#fff', 
                   '&.Mui-checked': { 
                     transform: 'translateX(14px)', 
                     color: '#fff', 
                     '& + .MuiSwitch-track': { 
-                      backgroundColor: '#2563eb', // Azul premium quando ON
+                      backgroundColor: '#2563eb', 
                       opacity: 1, 
                       border: 'none' 
                     } 
                   } 
                 },
                 '& .MuiSwitch-thumb': { 
-                  width: 16, 
-                  height: 16,
-                  boxShadow: '0 1px 2px rgba(0,0,0,0.25)' // Sombra para a bolinha saltar do fundo
+                  width: 16, height: 16,
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.25)' 
                 },
                 '& .MuiSwitch-track': { 
                   borderRadius: 10, 
-                  backgroundColor: '#cbd5e1', // Cinza sólido (slate-300) quando OFF. Zero transparência!
+                  backgroundColor: '#cbd5e1', 
                   opacity: 1, 
                 },
               }}
@@ -108,35 +114,34 @@ export const RangeSliderControl = ({ label, value, min, max, isActive, step = 1,
           )}
         </div>
 
-        {/* LADO DIREITO: BADGE COM INPUTS */}
         <div className={`flex items-center font-inter text-[11px] font-bold ${inputTextColor} ${inputBg} px-1.5 py-0.5 rounded-lg border border-gray-100/50 transition-all shrink-0`}>
           <input
             type="text"
             value={localMinInput}
             onChange={(e) => setLocalMinInput(e.target.value)}
+            onFocus={autoActivate} // Se clicar no input, já ativa!
             onBlur={finalizeInputChanges}
             onKeyDown={(e) => e.key === 'Enter' && finalizeInputChanges()}
-            disabled={!isActive} // DESABILITADO SE INATIVO
-            className="w-[38px] px-1 py-0.5 bg-transparent text-center rounded outline-none transition-all cursor-text [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none focus:bg-white focus:ring-1 focus:ring-blue-300 disabled:cursor-not-allowed"
+            className="w-[38px] px-1 py-0.5 bg-transparent text-center rounded outline-none transition-all cursor-text [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none focus:bg-white focus:ring-1 focus:ring-blue-300"
           />
           <span className="text-gray-300 font-normal mx-0.5">-</span>
           <input
             type="text"
             value={localMaxInput}
             onChange={(e) => setLocalMaxInput(e.target.value)}
+            onFocus={autoActivate} // Se clicar no input, já ativa!
             onBlur={finalizeInputChanges}
             onKeyDown={(e) => e.key === 'Enter' && finalizeInputChanges()}
-            disabled={!isActive} // DESABILITADO SE INATIVO
-            className="w-[38px] px-1 py-0.5 bg-transparent text-center rounded outline-none transition-all cursor-text [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none focus:bg-white focus:ring-1 focus:ring-blue-300 disabled:cursor-not-allowed"
+            className="w-[38px] px-1 py-0.5 bg-transparent text-center rounded outline-none transition-all cursor-text [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none focus:bg-white focus:ring-1 focus:ring-blue-300"
           />
           {unit && <span className="text-[10px] text-gray-400 font-normal ml-1">{unit}</span>}
         </div>
       </div>
       
-      {/* Slider Físico */}
       <Slider 
         value={localRange} 
         onChange={(_, v) => {
+          autoActivate(); // Assim que arrastar a bolinha, ativa o filtro!
           const vals = v as [number, number];
           setLocalRange(vals);
           setLocalMinInput(vals[0]);
@@ -148,9 +153,20 @@ export const RangeSliderControl = ({ label, value, min, max, isActive, step = 1,
         max={max} 
         step={step} 
         disableSwap
-        disabled={!isActive} // DESABILITADO SE INATIVO
         size="small" 
-        sx={{ color: isActive ? '#2563eb' : '#e2e8f0', padding: '10px 0', '& .MuiSlider-thumb': { backgroundColor: isActive ? '#2563eb' : '#cbd5e1', border: isActive ? '2px solid #fff' : '2px solid #e2e8f0' } }} 
+        sx={{ 
+            color: isActive ? '#2563eb' : '#e2e8f0', 
+            padding: '10px 0', 
+            '& .MuiSlider-thumb': { 
+                backgroundColor: isActive ? '#2563eb' : '#cbd5e1', 
+                border: isActive ? '2px solid #fff' : '2px solid #e2e8f0',
+                // Adicionamos um cursor pointer mesmo quando inativo para convidar o clique
+                cursor: 'pointer' 
+            },
+            '& .MuiSlider-track': {
+                transition: 'background-color 0.2s'
+            }
+        }} 
       />
     </div>
   );
