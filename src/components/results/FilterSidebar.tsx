@@ -18,6 +18,7 @@ import { DistributionSection } from './filters/sections/DistributionSection';
 import { MetabolismSection } from './filters/sections/MetabolismSection';
 import { ExcretionSection } from './filters/sections/ExcretionSection';
 import { ToxicitySection } from './filters/sections/ToxicitySection';
+import { defaultFilters } from '../../types/filters';
 
 interface FilterSidebarProps {
   isSidebarOpen: boolean;
@@ -56,12 +57,11 @@ const FilterSidebar = ({ isSidebarOpen, toggleSidebar, onAppliedFiltersChange }:
   const handleApply = () => {
     applyFilters();
     onAppliedFiltersChange?.(stagedFilters);
-    console.log("Filtros aplicados:", appliedFilters);
   };
 
   const handleReset = () => {
     resetFilters();
-    onAppliedFiltersChange?.(stagedFilters); // notifica com default
+    onAppliedFiltersChange?.(defaultFilters); // notifica com default
   };
 
   const handleSelectPreset = (preset: (typeof allPresets)[number]) => {

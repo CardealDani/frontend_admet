@@ -1,17 +1,19 @@
 // src/components/results/ResultsLayout.tsx
-import React, { useState } from 'react';
-import { Typography, Chip, Button } from '@mui/material';
+import React, { useState, useCallback } from 'react';
+import { Button } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import ViewListIcon from '@mui/icons-material/ViewList';
 import DownloadIcon from '@mui/icons-material/Download';
 
 import FilterSidebar from './FilterSidebar';
-import { ResultsTable } from './ResultsTable';
-// import MoleculePreview from './MoleculePreview'; // FASE 3
+import ResultsTable from './ResultsTable';
+import ResultsSummaryBar from './ResultsSummaryBar';
+import MoleculePreview from './MoleculePreview';
 
 import { useAdmetFilters } from '../hooks/useAdmetFilters';
-import { useMoleculeFilter } from '../hooks/useMoleculeFilter'; 
+import { useMoleculeFilter } from '../hooks/useMoleculeFilter';
 import type { Molecule } from '../../types/molecules.types';
+import type { AdmetFilters } from '../../types/filters';
 
 interface ResultsLayoutProps {
   onBack: () => void;
@@ -22,67 +24,81 @@ const ResultsLayout = ({ onBack, isBatch }: ResultsLayoutProps) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [selectedMolecule, setSelectedMolecule] = useState<Molecule | null>(null);
 
-  // 1. Instanciamos o cérebro de Filtros
-  const { appliedFilters } = useAdmetFilters();
+  // ── Filtros ──────────────────────────────────────────────────────────────
+  // O FilterSidebar gerencia staged internamente e nos notifica via callback
+  // quando o usuário clica "Aplicar". Aqui guardamos o snapshot aplicado.
+  const { appliedFilters, applyFilters } = useAdmetFilters();
 
-  // 2. Passamos os filtros para o motor de busca (TCHAU MOCK_DATA!)
-  const { filteredMolecules, totalCount } = useMoleculeFilter(appliedFilters);
+  // Estado local para receber os filtros do sidebar via callback
+  const [currentApplied, setCurrentApplied] = useState<AdmetFilters>(appliedFilters);
 
-  // Lógica original para o modo single molecule
+  const handleAppliedChange = useCallback((filters: AdmetFilters) => {
+    console.log("Received applied filters from sidebar:", filters);
+    setCurrentApplied(filters);
+  }, []);
+
+  // ── Dados filtrados ───────────────────────────────────────────────────────
+  const { filteredMolecules, totalCount, filteredCount } = useMoleculeFilter(currentApplied);
+
+  // ── Efeito para single molecule ───────────────────────────────────────────
   React.useEffect(() => {
-    if (!isBatch) {
-      // Quando for apenas uma molécula, no futuro o backend trará ela na posição [0]
-      // Por enquanto, não setamos uma molécula que não existe
+    if (!isBatch && filteredMolecules.length > 0) {
+      setSelectedMolecule(filteredMolecules[0]);
       setIsSidebarOpen(false);
     }
-  }, [isBatch]);
+  }, [isBatch, filteredMolecules]);
+
+  // ── Export CSV simples ────────────────────────────────────────────────────
+  const handleExportCsv = () => {
+    const headers = ['ID', 'Nome', 'SMILES', 'MW', 'LogP', 'TPSA', 'Lipinski', 'AMES', 'Hepato', 'hERG'];
+    const rows = filteredMolecules.map(m =>
+      [m.id, m.name, m.smiles, m.mw, m.logp, m.tpsa, m.lipinski, m.ames, m.hepato, m.herg].join(',')
+    );
+    const csv = [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'admet_results.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
-    <div className="w-full flex h-[calc(100vh-65px)] animate-fade-in bg-slate-50 mt-[-2rem] md:mt-0 overflow-hidden">
+    <div className="w-full flex h-[calc(100vh-65px)] animate-fade-in bg-gray-50 mt-[-2rem] md:mt-0 overflow-hidden">
 
+      {/* PAINEL ESQUERDO: FILTROS */}
       {isBatch && (
         <aside
           className={`bg-white flex flex-col h-full shadow-[2px_0_8px_-4px_rgba(0,0,0,0.05)] z-20 shrink-0 overflow-hidden transition-all duration-300 ease-in-out border-r border-gray-200 ${
-            isSidebarOpen ? 'w-[420px]' : 'w-16'
+            isSidebarOpen ? 'w-[380px]' : 'w-16'
           }`}
         >
-          <div className="w-[420px] min-w-[420px] flex flex-col h-full">
-            <FilterSidebar isSidebarOpen={isSidebarOpen} toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
+          <div className="w-[380px] min-w-[380px] flex flex-col h-full">
+            <FilterSidebar
+              isSidebarOpen={isSidebarOpen}
+              toggleSidebar={() => setIsSidebarOpen(v => !v)}
+              onAppliedFiltersChange={handleAppliedChange}
+            />
           </div>
         </aside>
       )}
 
-      {/* PAINEL 2: CENTRO (TABELA / DASHBOARD) */}
-      <main className="flex-1 flex flex-col h-full overflow-hidden relative">
-
-        {/* Container que cria o "respiro" (Margem) em volta da tabela */}
+      {/* PAINEL CENTRAL: TABELA */}
+      <main className="flex-1 flex flex-col h-full overflow-hidden relative bg-slate-50">
         <div className="flex-1 p-6 h-full flex flex-col min-h-0">
-
-          {/* O CARTÃO BRANCO (Onde a tabela e a topbar moram) */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 flex flex-col h-full overflow-hidden">
 
-            {/* TOPBAR ORIGINAL (Mantida e ligada aos hooks reais) */}
-            <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center shrink-0">
+            {/* TOPBAR */}
+            <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center shrink-0">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-blue-50 text-blue-600">
                   <ViewListIcon fontSize="small" />
                 </div>
-                <div className="flex items-center gap-3">
-                  <Typography className="font-nunito_sans font-extrabold text-gray-900 text-lg leading-none">
+                <div>
+                  <p className="font-nunito_sans font-extrabold text-gray-900 text-lg leading-none">
                     Análise em Lote
-                  </Typography>
-                  <Chip 
-                    // Agora mostra o número real!
-                    label={`${filteredMolecules.length} resultados`} 
-                    size="small" 
-                    className="bg-gray-100 text-gray-600 font-inter text-[11px] font-bold h-5" 
-                  />
-                  {/* Se houver filtro aplicado, mostramos o total do dataset */}
-                  {filteredMolecules.length !== totalCount && (
-                    <Typography className="font-inter text-xs text-gray-400">
-                      (de {totalCount})
-                    </Typography>
-                  )}
+                  </p>
                 </div>
               </div>
 
@@ -95,11 +111,12 @@ const ResultsLayout = ({ onBack, isBatch }: ResultsLayoutProps) => {
                 >
                   Nova Predição
                 </Button>
-                <div className="w-px h-6 bg-gray-200 mx-1"></div>
+                <div className="w-px h-6 bg-gray-200" />
                 <Button
                   variant="outlined"
                   size="small"
                   startIcon={<DownloadIcon />}
+                  onClick={handleExportCsv}
                   className="normal-case font-bold border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 shadow-sm px-4 rounded-lg"
                 >
                   Exportar CSV
@@ -107,30 +124,40 @@ const ResultsLayout = ({ onBack, isBatch }: ResultsLayoutProps) => {
               </div>
             </div>
 
-            {/* TABELA DE RESULTADOS (Passando os dados reais) */}
-            <div className="flex-1 overflow-hidden min-h-0 bg-white">
+            {/* SUMMARY BAR */}
+            <ResultsSummaryBar
+              filteredCount={filteredCount}
+              totalCount={totalCount}
+            />
+
+            {/* TABELA */}
+            <div className="flex-1 overflow-hidden min-h-0">
               <ResultsTable
                 molecules={filteredMolecules}
-                onRowClick={(mol) => setSelectedMolecule(mol)}
-                selectedMoleculeId={selectedMolecule?.id}
+                onRowClick={mol => setSelectedMolecule(mol)}
+                selectedMolId={selectedMolecule?.id ?? null}
               />
             </div>
 
-          </div> {/* Fim do Cartão Branco */}
-        </div> {/* Fim do Container de Respiro */}
+          </div>
+        </div>
       </main>
 
-      {/* PAINEL 3: DIREITA (PREVIEW DA MOLÉCULA - FASE 3) */}
+      {/* PAINEL DIREITO: PREVIEW */}
       <aside
-        className={`bg-white flex flex-col h-full shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)] z-20 shrink-0 overflow-hidden transition-all duration-300 ease-in-out border-l border-gray-200 ${
-          selectedMolecule ? 'w-[420px]' : 'w-0'
+        className={`bg-white flex flex-col h-full z-20 shrink-0 overflow-hidden transition-all duration-300 ease-in-out border-l border-gray-200 ${
+          selectedMolecule ? 'w-[380px]' : 'w-0'
         }`}
       >
-        {/* Temporário até a Fase 3 */}
-        <div className="p-4 text-center mt-20 font-inter text-gray-500">
-            Preview em construção (Fase 3)
-        </div>
+        {selectedMolecule && (
+          <MoleculePreview
+            molecule={selectedMolecule}
+            onClose={() => setSelectedMolecule(null)}
+            onViewFullReport={mol => console.log('Ver relatório completo:', mol.id)}
+          />
+        )}
       </aside>
+
     </div>
   );
 };

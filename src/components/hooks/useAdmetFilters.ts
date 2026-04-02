@@ -156,8 +156,10 @@ export const useAdmetFilters = (): UseAdmetFiltersReturn => {
     }, [stagedFilters]);
 
     const resetFilters = useCallback(() => {
+        console.log("Resetando filtros para default");
         setStagedFilters(defaultFilters);
         setAppliedFilters(defaultFilters);
+        console.log("Filtros após reset:", defaultFilters);
     }, []);
 
     // Carrega um preset no staged (não aplica automaticamente — usuário confirma)

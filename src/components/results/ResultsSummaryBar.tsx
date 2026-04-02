@@ -1,35 +1,43 @@
-import React from 'react';
-import { Typography, Button } from '@mui/material';
-import DownloadIcon from '@mui/icons-material/Download';
+// src/components/results/ResultsSummaryBar.tsx
+// Barra entre topbar e tabela: mostra "X de Y moléculas" e sinaliza filtros ativos.
+
+import { Chip } from '@mui/material';
+import FilterListIcon from '@mui/icons-material/FilterList';
 
 interface ResultsSummaryBarProps {
-  totalMolecules: number;
   filteredCount: number;
+  totalCount: number;
 }
 
-export const ResultsSummaryBar = ({ totalMolecules, filteredCount }: ResultsSummaryBarProps) => {
-  return (
-    <div className="flex justify-between items-center py-3 px-4 bg-white border-b border-gray-200">
-      <div className="flex items-baseline gap-2">
-        <Typography variant="h6" className="font-nunito_sans font-extrabold text-gray-800">
-          Resultados
-        </Typography>
-        <Typography className="font-inter text-sm text-gray-500 font-medium">
-          Mostrando <span className="font-bold text-blue-600">{filteredCount}</span> de {totalMolecules} moléculas
-        </Typography>
-      </div>
+const ResultsSummaryBar = ({ filteredCount, totalCount }: ResultsSummaryBarProps) => {
+  const isFiltered = filteredCount < totalCount;
 
-      <div className="flex gap-2">
-        {/* Futura funcionalidade de exportação para CSV/SDF */}
-        <Button 
-          variant="outlined" 
-          size="small" 
-          startIcon={<DownloadIcon fontSize="small" />}
-          className="font-inter font-semibold text-sm border-gray-300 text-gray-600 hover:bg-gray-50 normal-case"
-        >
-          Exportar Dados
-        </Button>
-      </div>
+  return (
+    <div className="px-6 py-2.5 border-b border-gray-100 flex items-center gap-3 shrink-0 bg-gray-50/50">
+      <p className="font-inter text-sm text-gray-600">
+        <span className="font-bold text-gray-900">{filteredCount}</span>
+        {' '}de{' '}
+        <span className="font-medium">{totalCount}</span>
+        {' '}moléculas
+      </p>
+
+      {isFiltered && (
+        <Chip
+          icon={<FilterListIcon sx={{ fontSize: 13 }} />}
+          label="Filtros ativos"
+          size="small"
+          className="bg-blue-50 text-blue-700 border border-blue-100 font-inter font-bold"
+          sx={{ height: 20, fontSize: 11, '& .MuiChip-icon': { color: '#1d4ed8' } }}
+        />
+      )}
+
+      {filteredCount === 0 && (
+        <span className="font-inter text-xs text-amber-600 font-medium">
+          Nenhuma molécula corresponde aos filtros aplicados
+        </span>
+      )}
     </div>
   );
 };
+
+export default ResultsSummaryBar;
