@@ -34,7 +34,7 @@ const MOCK_DATA = [
     lipinski: 'Pass', pfizer: 'Pass', qed: 0.81
   },
   {
-    id: 'MOL-003', name: 'Sildenafil (Viagra)', smiles: 'CCCC1=NN(C2=C1N=C(NC2=O)C3=C(C=CC(=C3)S(=O)(=O)N4CCN(CC4)C)OCCC)C',
+    id: 'MOL-003', name: 'Sildenafil', smiles: 'CCCC1=NN(C2=C1N=C(NC2=O)C3=C(C=CC(=C3)S(=O)(=O)N4CCN(CC4)C)OCCC)C',
     imgUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f8/Sildenafil_structure.svg/200px-Sildenafil_structure.svg.png',
     mw: 474.58, tpsa: 115.17, logp: 2.26,
     abs: 41, caco2: 6.2, pgp: 'Sim',
@@ -75,7 +75,7 @@ const ResultsLayout = ({ onBack, isBatch }: ResultsLayoutProps) => {
   }, [isBatch]);
 
   return (
-    <div className="w-full flex h-[calc(100vh-80px)] animate-fade-in bg-gray-50 mt-[-2rem] md:mt-0 overflow-hidden">
+    <div className="w-full flex h-[calc(100vh-65px)] animate-fade-in bg-gray-50 mt-[-2rem] md:mt-0 overflow-hidden">
 
       {isBatch && (
         <aside

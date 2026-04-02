@@ -89,27 +89,27 @@ export const defaultFilters: AdmetFilters = {
   },
   absorption: {
     absorptionPercent: { value: [0, 100], active: false },
-    caco2: ['Excelente', 'Ruim'], 
-    pgpInhibitor: ['Excelente', 'Médio', 'Ruim'],
+    caco2: ['', ''], 
+    pgpInhibitor: ['', '', ''],
   },
   distribution: {
-    bbb: ['Baixa', 'Média', 'Alta'],
+    bbb: ['', '', ''],
     ppb: { value: [0, 100], active: false },
     fu: { value: [0, 100], active: false },
   },
   metabolism: {
-    cyp2d6Substrate: ['Sim', 'Não', 'Qualquer'],
-    cyp1a2Substrate: ['Sim', 'Não', 'Qualquer'],
-    cyp3a4Substrate: ['Sim', 'Não', 'Qualquer'],
+    cyp2d6Substrate: ['', ''],
+    cyp1a2Substrate: ['',''],
+    cyp3a4Substrate: ['',''],
   },
   excretion: {
     clPlasma: { value: [0, 150], active: false }, 
     tHalf: { value: [0, 48], active: false },    
   },
  toxicity: {
-    ames: ['Seguro', 'Atenção', 'Tóxico'],
-    hepato: ['Seguro', 'Atenção', 'Tóxico'],
-    herg: ['Seguro', 'Atenção', 'Tóxico'],
+    ames: ['','',''],
+    hepato: ['','',''],
+    herg: ['','',''],
   }
 };
 
