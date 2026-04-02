@@ -17,23 +17,23 @@ export const ToxicitySection = ({ filters, count, toggleArrayFilter }: ToxicityS
 
     // 1. Configuração do AMES (Mutagenicidade)
     const amesOptions: FilterOption[] = [
-        { id: 'Seguro',  label: 'Excelente',     subtitle: '(0 - 0.3)',   color: 'success', icon: CheckCircleRoundedIcon },
-        { id: 'Atenção', label: 'Médio',    subtitle: '(0.3 - 0.7)', color: 'warning', icon: WarningRoundedIcon },
-        { id: 'Tóxico',  label: 'Ruim', subtitle: '(0.7 - 1.0)', color: 'error',   icon: CancelRoundedIcon }
+        { id: 'Excelente',  label: 'Excelente',     subtitle: '(0 - 0.3)',   color: 'success', icon: CheckCircleRoundedIcon },
+        { id: 'Médio', label: 'Médio',    subtitle: '(0.3 - 0.7)', color: 'warning', icon: WarningRoundedIcon },
+        { id: 'Ruim',  label: 'Ruim', subtitle: '(0.7 - 1.0)', color: 'error',   icon: CancelRoundedIcon }
     ];
 
     // 2. Configuração do hERG (Cardiotoxicidade)
     const hergOptions: FilterOption[] = [
-        { id: 'Seguro',  label: 'Excelente',        subtitle: '(0 - 0.3)',   color: 'success', icon: CheckCircleRoundedIcon },
-        { id: 'Atenção', label: 'Médio',       subtitle: '(0.3 - 0.7)', color: 'warning', icon: WarningRoundedIcon },
-        { id: 'Tóxico',  label: 'Ruim   ',  subtitle: '(0.7 - 1.0)', color: 'error',   icon: CancelRoundedIcon }
+        { id: 'Excelente',  label: 'Excelente',        subtitle: '(0 - 0.3)',   color: 'success', icon: CheckCircleRoundedIcon },
+        { id: 'Médio', label: 'Médio',       subtitle: '(0.3 - 0.7)', color: 'warning', icon: WarningRoundedIcon },
+        { id: 'Ruim',  label: 'Ruim   ',  subtitle: '(0.7 - 1.0)', color: 'error',   icon: CancelRoundedIcon }
     ];
 
     // 3. Configuração da Hepatotoxicidade
     const hepatoOptions: FilterOption[] = [
-        { id: 'Seguro',  label: 'Excelente',        subtitle: '(0 - 0.3)',   color: 'success', icon: CheckCircleRoundedIcon },
-        { id: 'Atenção', label: 'Médio',       subtitle: '(0.3 - 0.7)', color: 'warning', icon: WarningRoundedIcon },
-        { id: 'Tóxico',  label: 'Ruim   ',  subtitle: '(0.7 - 1.0)', color: 'error',   icon: CancelRoundedIcon }
+        { id: 'Excelente',  label: 'Excelente',        subtitle: '(0 - 0.3)',   color: 'success', icon: CheckCircleRoundedIcon },
+        { id: 'Médio', label: 'Médio',       subtitle: '(0.3 - 0.7)', color: 'warning', icon: WarningRoundedIcon },
+        { id: 'Ruim',  label: 'Ruim   ',  subtitle: '(0.7 - 1.0)', color: 'error',   icon: CancelRoundedIcon }
     ];
 
     return (

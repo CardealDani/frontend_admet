@@ -21,9 +21,9 @@ export const DistributionSection = ({ filters, count, updateFilter, toggleArrayF
     // Configuração do BBB (Alvo Periférico)
     // Mantemos os IDs 'Baixa', 'Média', 'Alta' para o estado, mas exibimos os Labels da documentação
     const bbbOptions: FilterOption[] = [
-        { id: 'Baixa', label: 'Excelente', subtitle: '(0 - 0.3)', color: 'success', icon: CheckCircleRoundedIcon },
-        { id: 'Média', label: 'Médio', subtitle: '(0.3 - 0.7)', color: 'warning', icon: WarningRoundedIcon },
-        { id: 'Alta', label: 'Ruim', subtitle: '(0.7 - 1.0)', color: 'error', icon: CancelRoundedIcon }
+        { id: 'Excelente', label: 'Excelente', subtitle: '(0 - 0.3)', color: 'success', icon: CheckCircleRoundedIcon },
+        { id: 'Médio', label: 'Médio', subtitle: '(0.3 - 0.7)', color: 'warning', icon: WarningRoundedIcon },
+        { id: 'Ruim', label: 'Ruim', subtitle: '(0.7 - 1.0)', color: 'error', icon: CancelRoundedIcon }
     ];
 
     return (

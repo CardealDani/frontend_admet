@@ -49,6 +49,7 @@ const applyFilters = (molecules: Molecule[], f: AdmetFilters): Molecule[] => {
 
     // ── Distribuição ────────────────────────────────────────────────────────
     const activeBbb = f.distribution.bbb.filter(Boolean);
+    console.log("Active BBB filters:", activeBbb);
     if (activeBbb.length > 0 && !activeBbb.includes(mol.bbb)) return false;
 
     if (f.distribution.ppb.active) {
