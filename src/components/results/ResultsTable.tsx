@@ -1,97 +1,174 @@
 // src/components/results/ResultsTable.tsx
-
-import { Typography, Tooltip } from '@mui/material';
-import SwapVertIcon from '@mui/icons-material/SwapVert';
-
-const StatusBadge = ({ status }: { status: string }) => {
-  let colorClass = "bg-gray-100 text-gray-600";
-  if (status === 'Negativo' || status === 'Pass' || status === 'Seguro') colorClass = "bg-green-50 text-green-700 border border-green-200";
-  else if (status === 'Médio' || status === 'Atenção') colorClass = "bg-yellow-50 text-yellow-700 border border-yellow-200";
-  else if (status === 'Positivo' || status === 'Alto' || status === 'Fail') colorClass = "bg-red-50 text-red-700 border border-red-200";
-
-  return (
-    <span className={`px-2 py-0.5 text-[10px] font-bold rounded font-inter inline-block min-w-[60px] text-center ${colorClass}`}>
-      {status}
-    </span>
-  );
-};
+import React, { useState, useMemo } from 'react';
+import { 
+  Table, TableBody, TableCell, TableContainer, TableHead, TableRow, 
+  TablePagination, Typography, Tooltip, TableSortLabel 
+} from '@mui/material';
+import type { Molecule } from '../../types/molecules.types';
 
 interface ResultsTableProps {
-  molecules: any[];
-  onRowClick: (mol: any) => void;
-  selectedMolId: string | null;
+  molecules: Molecule[];
+  onRowClick: (molecule: Molecule) => void;
+  selectedMoleculeId?: string; // Corrigido o nome da prop para bater com o layout
 }
 
-const ResultsTable = ({ molecules, onRowClick, selectedMolId }: ResultsTableProps) => {
+type Order = 'asc' | 'desc';
+
+export const ResultsTable = ({ molecules, onRowClick, selectedMoleculeId }: ResultsTableProps) => {
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [orderBy, setOrderBy] = useState<keyof Molecule>('mw');
+  const [order, setOrder] = useState<Order>('asc');
+
+  // Lógica real de Ordenação
+  const handleRequestSort = (property: keyof Molecule) => {
+    const isAsc = orderBy === property && order === 'asc';
+    setOrder(isAsc ? 'desc' : 'asc');
+    setOrderBy(property);
+  };
+
+  const sortedMolecules = useMemo(() => {
+    return [...molecules].sort((a, b) => {
+      const aValue = a[orderBy];
+      const bValue = b[orderBy];
+      if (aValue < bValue) return order === 'asc' ? -1 : 1;
+      if (aValue > bValue) return order === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }, [molecules, order, orderBy]);
+
+  // Lógica real de Paginação
+  const paginatedMolecules = useMemo(() => {
+    const startIndex = page * rowsPerPage;
+    return sortedMolecules.slice(startIndex, startIndex + rowsPerPage);
+  }, [sortedMolecules, page, rowsPerPage]);
+
+  const handleChangePage = (_: unknown, newPage: number) => setPage(newPage);
+  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
+
   return (
-    <div className="w-full h-full flex flex-col bg-white">
-      <div className="flex-1 overflow-auto custom-scrollbar">
-        <table className="w-full text-left border-collapse relative">
+    <div className="flex flex-col h-full bg-white relative">
+      {/* Container da tabela que rola (Scroll) */}
+      <TableContainer className="flex-1 overflow-y-auto custom-scrollbar">
+        <Table stickyHeader size="small" className="min-w-[600px]">
+          <TableHead>
+            <TableRow>
+              {/* O sticky header precisa de um fundo sólido e z-index para não sobrepor o conteúdo */}
+              <TableCell className="bg-gray-50 border-b border-gray-200 font-inter font-bold text-gray-500 text-xs py-3 z-10 w-16">
+                Estrutura
+              </TableCell>
+              
+              <TableCell className="bg-gray-50 border-b border-gray-200 font-inter font-bold text-gray-500 text-xs py-3 z-10">
+                <TableSortLabel active={orderBy === 'name'} direction={orderBy === 'name' ? order : 'asc'} onClick={() => handleRequestSort('name')}>
+                  Nome / ID
+                </TableSortLabel>
+              </TableCell>
+              
+              <TableCell className="bg-gray-50 border-b border-gray-200 font-inter font-bold text-gray-500 text-xs py-3 z-10">
+                <TableSortLabel active={orderBy === 'mw'} direction={orderBy === 'mw' ? order : 'asc'} onClick={() => handleRequestSort('mw')}>
+                  MW (g/mol)
+                </TableSortLabel>
+              </TableCell>
 
-          <thead className="bg-white border-b-2 border-gray-200 sticky top-0 z-10 shadow-sm">
-            <tr>
-              <th className="p-3 font-inter font-bold text-xs text-gray-800 uppercase tracking-wider text-center w-12">#</th>
-              <th className="p-3 font-inter font-bold text-xs text-gray-800 uppercase tracking-wider text-center w-24">2D</th>
-              <th className="p-3 font-inter font-bold text-xs text-gray-800 uppercase tracking-wider">Molecule</th>
-              <th className="p-3 font-inter font-bold text-xs text-gray-800 uppercase tracking-wider"><div className="flex items-center gap-1 cursor-pointer">MW <SwapVertIcon fontSize="small" className="opacity-50" /></div></th>
-              <th className="p-3 font-inter font-bold text-xs text-gray-800 uppercase tracking-wider"><div className="flex items-center gap-1 cursor-pointer">LogP <SwapVertIcon fontSize="small" className="opacity-50" /></div></th>
-              <th className="p-3 font-inter font-bold text-xs text-gray-800 uppercase tracking-wider text-center">Ames</th>
-              <th className="p-3 font-inter font-bold text-xs text-gray-800 uppercase tracking-wider text-center">Hepato</th>
-              <th className="p-3 font-inter font-bold text-xs text-gray-800 uppercase tracking-wider text-center">Lipinski</th>
-            </tr>
-          </thead>
+              <TableCell className="bg-gray-50 border-b border-gray-200 font-inter font-bold text-gray-500 text-xs py-3 z-10">
+                <TableSortLabel active={orderBy === 'logp'} direction={orderBy === 'logp' ? order : 'asc'} onClick={() => handleRequestSort('logp')}>
+                  LogP
+                </TableSortLabel>
+              </TableCell>
 
-          <tbody className="divide-y divide-gray-50">
-            {molecules.map((mol, index) => {
-              const isSelected = mol.id === selectedMolId;
-              return (
-                <tr
-                  key={mol.id}
-                  onClick={() => onRowClick(mol)}
-                  // A linha inteira é clicável. Fica azulada se estiver selecionada.
-                  className={`cursor-pointer transition-colors group ${isSelected ? 'bg-blue-50/50 border-l-4 border-l-blue-500' : 'hover:bg-gray-50 border-l-4 border-l-transparent'}`}
-                >
-                  <td className="p-3 text-center border-r border-gray-50">
-                    <Typography className="font-inter font-medium text-gray-400 text-xs">{index + 1}</Typography>
-                  </td>
-                  <td className="p-2 flex items-center justify-center">
-                    <div className="w-16 h-12 bg-transparent flex items-center justify-center mix-blend-multiply">
-                      <img src={mol.imgUrl} alt={mol.name} className="max-w-full max-h-full object-contain opacity-80 group-hover:scale-110 transition-transform" />
-                    </div>
-                  </td>
-                  <td className="p-3">
-                    <div className="flex flex-col">
-                      <Typography className={`font-nunito_sans font-bold text-sm ${isSelected ? 'text-blue-700' : 'text-gray-800'}`}>
+              <TableCell className="bg-gray-50 border-b border-gray-200 font-inter font-bold text-gray-500 text-xs py-3 z-10">
+                <TableSortLabel active={orderBy === 'lipinski'} direction={orderBy === 'lipinski' ? order : 'asc'} onClick={() => handleRequestSort('lipinski')}>
+                  Lipinski
+                </TableSortLabel>
+              </TableCell>
+            </TableRow>
+          </TableHead>
+
+          <TableBody>
+            {paginatedMolecules.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center py-16">
+                  <Typography className="text-gray-400 font-inter text-sm">Nenhuma molécula atende aos filtros atuais.</Typography>
+                </TableCell>
+              </TableRow>
+            ) : (
+              paginatedMolecules.map((mol) => {
+                const isSelected = mol.id === selectedMoleculeId;
+                
+                return (
+                  <TableRow 
+                    key={mol.id} 
+                    hover 
+                    onClick={() => onRowClick(mol)}
+                    className={`cursor-pointer transition-colors duration-150 ${isSelected ? 'bg-blue-50/50' : ''}`}
+                  >
+                    {/* Imagem (Mantive a sua lógica de imagem em caixa com mix-blend) */}
+                    <TableCell className="py-2">
+                      <div className={`w-12 h-12 bg-white rounded flex items-center justify-center p-1 transition-all ${isSelected ? 'border border-blue-300 shadow-sm' : 'border border-gray-100'}`}>
+                        {/* Se não houver imgUrl, a gente poderia colocar um placeholder aqui no futuro */}
+                        {mol.imgUrl ? (
+                            <img src={mol.imgUrl} alt={mol.name} className="max-w-full max-h-full object-contain mix-blend-multiply" />
+                        ) : (
+                            <span className="text-[10px] text-gray-300">2D</span>
+                        )}
+                      </div>
+                    </TableCell>
+
+                    <TableCell>
+                      <Typography className={`font-inter font-bold text-sm ${isSelected ? 'text-blue-700' : 'text-gray-800'}`}>
                         {mol.name}
                       </Typography>
                       <Tooltip title={mol.smiles} placement="bottom-start">
-                        <Typography className="font-mono text-[10px] text-gray-400 truncate max-w-[150px]">
+                        <Typography className="font-mono text-[10px] text-gray-400 truncate max-w-[180px]">
                           {mol.smiles}
                         </Typography>
                       </Tooltip>
-                    </div>
-                  </td>
-                  <td className="p-3"><Typography className={`font-mono text-xs ${mol.mw > 500 ? 'text-red-500 font-bold' : 'text-gray-700'}`}>{mol.mw.toFixed(2)}</Typography></td>
-                  <td className="p-3"><Typography className={`font-mono text-xs ${mol.logp > 5 ? 'text-red-500 font-bold' : 'text-gray-700'}`}>{mol.logp.toFixed(2)}</Typography></td>
-                  <td className="p-3 text-center"><StatusBadge status={mol.ames} /></td>
-                  <td className="p-3 text-center"><StatusBadge status={mol.hepato} /></td>
-                  <td className="p-3 text-center"><StatusBadge status={mol.lipinski} /></td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
+                    </TableCell>
 
-      <div className="shrink-0 flex items-center justify-between p-3 border-t border-gray-200 bg-white">
-        <Typography className="font-inter text-xs text-gray-500">Mostrando {molecules.length} resultados</Typography>
-        <div className="flex gap-2">
-          <button className="px-2 py-1 text-xs font-inter text-gray-400 border border-gray-200 rounded cursor-not-allowed">Ant</button>
-          <button className="px-2 py-1 text-xs font-inter text-blue-600 border border-blue-200 hover:bg-blue-50 rounded">Próx</button>
-        </div>
-      </div>
+                    <TableCell className="font-inter text-sm text-gray-600 font-medium">
+                        {mol.mw.toFixed(2)}
+                    </TableCell>
+                    
+                    <TableCell className="font-inter text-sm text-gray-600 font-medium">
+                        {mol.logp.toFixed(2)}
+                    </TableCell>
+
+                    {/* Status Rápido */}
+                    <TableCell>
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wide border ${
+                          mol.lipinski === 'Pass' 
+                          ? 'bg-emerald-50 text-emerald-600 border-emerald-100' 
+                          : 'bg-rose-50 text-rose-600 border-rose-100'
+                        }`}
+                      >
+                        {mol.lipinski === 'Pass' ? 'Pass' : 'Fail'}
+                      </span>
+                    </TableCell>
+
+                  </TableRow>
+                );
+              })
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      {/* Paginação Fixa no Rodapé da Tabela */}
+      <TablePagination
+        component="div"
+        count={sortedMolecules.length}
+        page={page}
+        onPageChange={handleChangePage}
+        rowsPerPage={rowsPerPage}
+        onRowsPerPageChange={handleChangeRowsPerPage}
+        rowsPerPageOptions={[10, 25, 50]}
+        labelRowsPerPage="Linhas:"
+        labelDisplayedRows={({ from, to, count }) => `${from}–${to} de ${count}`}
+        className="bg-white border-t border-gray-100 overflow-hidden shrink-0 font-inter shadow-[0_-4px_10px_-5px_rgba(0,0,0,0.02)] z-10"
+      />
     </div>
   );
 };
-
-export default ResultsTable;

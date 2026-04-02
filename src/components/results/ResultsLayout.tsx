@@ -6,92 +6,54 @@ import ViewListIcon from '@mui/icons-material/ViewList';
 import DownloadIcon from '@mui/icons-material/Download';
 
 import FilterSidebar from './FilterSidebar';
-import ResultsTable from './ResultsTable';
-import MoleculePreview from './MoleculePreview'; // O nosso novo painel direito!
+import { ResultsTable } from './ResultsTable';
+// import MoleculePreview from './MoleculePreview'; // FASE 3
 
-// O MOCK SUPREMO (Com todos os dados definidos no seu prompt)
-const MOCK_DATA = [
-  {
-    id: 'MOL-001', name: 'Aspirina', smiles: 'CC(=O)OC1=CC=CC=C1C(=O)O',
-    imgUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Aspirin-skeletal.svg/200px-Aspirin-skeletal.svg.png',
-    mw: 180.16, tpsa: 65.12, logp: 1.19,
-    abs: 98, caco2: 12.4, pgp: 'Não',
-    bbb: 'Permeável', ppb: 49, fu: 0.51,
-    cyp2d6: 'Não', cyp1a2: 'Não', cyp3a4: 'Sim',
-    clPlasma: 5.2, tHalf: 3.1,
-    ames: 'Negativo', hepato: 'Seguro', herg: 'Baixo',
-    lipinski: 'Pass', pfizer: 'Pass', qed: 0.72
-  },
-  {
-    id: 'MOL-002', name: 'Ibuprofeno', smiles: 'CC(C)CC1=CC=C(C=C1)C(C)C(=O)O',
-    imgUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/Ibuprofen_Structure.svg/200px-Ibuprofen_Structure.svg.png',
-    mw: 206.28, tpsa: 37.30, logp: 3.97,
-    abs: 100, caco2: 24.1, pgp: 'Não',
-    bbb: 'Permeável', ppb: 99, fu: 0.01,
-    cyp2d6: 'Não', cyp1a2: 'Não', cyp3a4: 'Não',
-    clPlasma: 3.8, tHalf: 2.0,
-    ames: 'Negativo', hepato: 'Seguro', herg: 'Baixo',
-    lipinski: 'Pass', pfizer: 'Pass', qed: 0.81
-  },
-  {
-    id: 'MOL-003', name: 'Sildenafil', smiles: 'CCCC1=NN(C2=C1N=C(NC2=O)C3=C(C=CC(=C3)S(=O)(=O)N4CCN(CC4)C)OCCC)C',
-    imgUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f8/Sildenafil_structure.svg/200px-Sildenafil_structure.svg.png',
-    mw: 474.58, tpsa: 115.17, logp: 2.26,
-    abs: 41, caco2: 6.2, pgp: 'Sim',
-    bbb: 'Baixa', ppb: 96, fu: 0.04,
-    cyp2d6: 'Não', cyp1a2: 'Não', cyp3a4: 'Sim',
-    clPlasma: 41.2, tHalf: 4.0,
-    ames: 'Negativo', hepato: 'Atenção', herg: 'Médio',
-    lipinski: 'Pass', pfizer: 'Fail', qed: 0.45
-  },
-  {
-    id: 'MOL-004', name: 'Azobenzeno', smiles: 'C1=CC=C(C=C1)N=NC2=CC=CC=C2',
-    imgUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Azobenzene_structure.svg/200px-Azobenzene_structure.svg.png',
-    mw: 182.22, tpsa: 24.78, logp: 3.82,
-    abs: 99, caco2: 45.1, pgp: 'Não',
-    bbb: 'Permeável', ppb: 85, fu: 0.15,
-    cyp2d6: 'Não', cyp1a2: 'Sim', cyp3a4: 'Não',
-    clPlasma: 12.0, tHalf: 6.5,
-    ames: 'Positivo', hepato: 'Positivo', herg: 'Alto',
-    lipinski: 'Pass', pfizer: 'Pass', qed: 0.55
-  }
-];
+import { useAdmetFilters } from '../hooks/useAdmetFilters';
+import { useMoleculeFilter } from '../hooks/useMoleculeFilter'; 
+import type { Molecule } from '../../types/molecules.types';
 
 interface ResultsLayoutProps {
-  onBack: () => void; // Esta é a função que dispara o Modal de Risco lá no PredictPage
+  onBack: () => void;
   isBatch: boolean;
 }
 
 const ResultsLayout = ({ onBack, isBatch }: ResultsLayoutProps) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [selectedMolecule, setSelectedMolecule] = useState<any | null>(null);
+  const [selectedMolecule, setSelectedMolecule] = useState<Molecule | null>(null);
 
+  // 1. Instanciamos o cérebro de Filtros
+  const { appliedFilters } = useAdmetFilters();
 
+  // 2. Passamos os filtros para o motor de busca (TCHAU MOCK_DATA!)
+  const { filteredMolecules, totalCount } = useMoleculeFilter(appliedFilters);
+
+  // Lógica original para o modo single molecule
   React.useEffect(() => {
     if (!isBatch) {
-      setSelectedMolecule(MOCK_DATA[0]);
+      // Quando for apenas uma molécula, no futuro o backend trará ela na posição [0]
+      // Por enquanto, não setamos uma molécula que não existe
       setIsSidebarOpen(false);
     }
   }, [isBatch]);
 
   return (
-    <div className="w-full flex h-[calc(100vh-65px)] animate-fade-in bg-gray-50 mt-[-2rem] md:mt-0 overflow-hidden">
+    <div className="w-full flex h-[calc(100vh-65px)] animate-fade-in bg-slate-50 mt-[-2rem] md:mt-0 overflow-hidden">
 
       {isBatch && (
         <aside
-          className={`bg-white flex flex-col h-full shadow-[2px_0_8px_-4px_rgba(0,0,0,0.05)] z-20 shrink-0 overflow-hidden transition-all duration-300 ease-in-out border-r border-gray-200 ${isSidebarOpen ? 'w-[420px]' : 'w-16'
-            }`}
+          className={`bg-white flex flex-col h-full shadow-[2px_0_8px_-4px_rgba(0,0,0,0.05)] z-20 shrink-0 overflow-hidden transition-all duration-300 ease-in-out border-r border-gray-200 ${
+            isSidebarOpen ? 'w-[420px]' : 'w-16'
+          }`}
         >
-          {/* O min-w-[380px] impede que o conteúdo amasse. O que não cabe em 64px é apenas "cortado" pelo overflow-hidden do aside */}
           <div className="w-[420px] min-w-[420px] flex flex-col h-full">
-            {/* Passamos o estado e a função para o FilterSidebar se autogerenciar */}
             <FilterSidebar isSidebarOpen={isSidebarOpen} toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)} />
           </div>
         </aside>
       )}
 
       {/* PAINEL 2: CENTRO (TABELA / DASHBOARD) */}
-      <main className="flex-1 flex flex-col h-full overflow-hidden relative bg-slate-50">
+      <main className="flex-1 flex flex-col h-full overflow-hidden relative">
 
         {/* Container que cria o "respiro" (Margem) em volta da tabela */}
         <div className="flex-1 p-6 h-full flex flex-col min-h-0">
@@ -99,9 +61,8 @@ const ResultsLayout = ({ onBack, isBatch }: ResultsLayoutProps) => {
           {/* O CARTÃO BRANCO (Onde a tabela e a topbar moram) */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 flex flex-col h-full overflow-hidden">
 
-            {/* TOPBAR (Agora faz parte do cartão, atuando como o cabeçalho dele) */}
+            {/* TOPBAR ORIGINAL (Mantida e ligada aos hooks reais) */}
             <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center shrink-0">
-
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-blue-50 text-blue-600">
                   <ViewListIcon fontSize="small" />
@@ -110,12 +71,22 @@ const ResultsLayout = ({ onBack, isBatch }: ResultsLayoutProps) => {
                   <Typography className="font-nunito_sans font-extrabold text-gray-900 text-lg leading-none">
                     Análise em Lote
                   </Typography>
-                  <Chip label="124 resultados" size="small" className="bg-gray-100 text-gray-600 font-inter text-[11px] font-bold h-5" />
+                  <Chip 
+                    // Agora mostra o número real!
+                    label={`${filteredMolecules.length} resultados`} 
+                    size="small" 
+                    className="bg-gray-100 text-gray-600 font-inter text-[11px] font-bold h-5" 
+                  />
+                  {/* Se houver filtro aplicado, mostramos o total do dataset */}
+                  {filteredMolecules.length !== totalCount && (
+                    <Typography className="font-inter text-xs text-gray-400">
+                      (de {totalCount})
+                    </Typography>
+                  )}
                 </div>
               </div>
 
               <div className="flex items-center gap-3">
-                {/* O Botão de Nova Predição continua aqui, mas eu mudei o ícone para + para ficar mais universal */}
                 <Button
                   onClick={onBack}
                   variant="text"
@@ -136,16 +107,12 @@ const ResultsLayout = ({ onBack, isBatch }: ResultsLayoutProps) => {
               </div>
             </div>
 
-            {/* TABELA DE RESULTADOS */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar min-h-0 bg-white">
-              {/* DICA EXTRA DE UX: No seu ResultsTable.tsx, certifique-se de que a tag <table>
-                  não esteja forçando um 'w-full' se não for necessário, ou defina larguras 
-                  máximas (max-w) para as colunas de texto para elas não esticarem ao infinito. 
-               */}
+            {/* TABELA DE RESULTADOS (Passando os dados reais) */}
+            <div className="flex-1 overflow-hidden min-h-0 bg-white">
               <ResultsTable
-                molecules={MOCK_DATA}
+                molecules={filteredMolecules}
                 onRowClick={(mol) => setSelectedMolecule(mol)}
-                selectedMolId={selectedMolecule?.id || null}
+                selectedMoleculeId={selectedMolecule?.id}
               />
             </div>
 
@@ -153,20 +120,16 @@ const ResultsLayout = ({ onBack, isBatch }: ResultsLayoutProps) => {
         </div> {/* Fim do Container de Respiro */}
       </main>
 
-      {/* PAINEL 3: DIREITA (PREVIEW DA MOLÉCULA) */}
+      {/* PAINEL 3: DIREITA (PREVIEW DA MOLÉCULA - FASE 3) */}
       <aside
-        className={`bg-white flex flex-col h-full shadow-[2px_0_8px_-4px_rgba(0,0,0,0.05)] z-20 shrink-0 overflow-hidden transition-all duration-300 ease-in-out border-r border-gray-200 ${selectedMolecule ? 'w-[420px]' : 'w-0'
-          }`}
+        className={`bg-white flex flex-col h-full shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)] z-20 shrink-0 overflow-hidden transition-all duration-300 ease-in-out border-l border-gray-200 ${
+          selectedMolecule ? 'w-[420px]' : 'w-0'
+        }`}
       >
-
-        {selectedMolecule && (
-          <MoleculePreview
-            molecule={selectedMolecule}
-            onClose={() => setSelectedMolecule(null)}
-            onViewFullReport={(mol) => console.log("Navegar para relatório completo", mol)}
-          />
-        )}
-
+        {/* Temporário até a Fase 3 */}
+        <div className="p-4 text-center mt-20 font-inter text-gray-500">
+            Preview em construção (Fase 3)
+        </div>
       </aside>
     </div>
   );
