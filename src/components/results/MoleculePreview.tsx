@@ -126,7 +126,7 @@ const AdmetRadar = ({ mol }: RadarProps) => {
   const webLevels = [1, 0.66, 0.33];
 
   return (
-    <svg width="220" height="210" viewBox="0 0 220 210" className="mx-auto">
+    <svg width="300" height="210" viewBox="0 0 220 210" className="mx-auto">
       {/* Teias */}
       {webLevels.map(level => {
         const pts = AXES.map(ax => axisPoint(ax.angle, level * R));
@@ -280,7 +280,7 @@ const MoleculePreview = ({ molecule: mol, onClose, onViewFullReport }: MoleculeP
           />
 
           {/* Lipinski + Pfizer pills */}
-          <div className="flex gap-2 pt-1">
+          <div className="flex gap-2 pt-1 justify-center">
             <span className={`px-3 py-1 text-xs font-bold rounded-lg border font-inter ${
               mol.lipinski === 'Pass' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'
             }`}>

@@ -1,88 +1,200 @@
 // src/components/results/MoleculeDetail.tsx
-// Relatório expandido de uma molécula. Recebe Molecule via props — zero hardcode.
-// Usado quando o usuário clica em "Ver Relatório Completo" no MoleculePreview.
+// Relatório completo de uma molécula.
+// Recebe Molecule via props — zero hardcode.
 
-import { Typography, Divider, IconButton, Tooltip } from '@mui/material';
+import { useState } from 'react';
+import { Tooltip, IconButton } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
-import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
+import CancelIcon from '@mui/icons-material/Cancel';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import ScienceIcon from '@mui/icons-material/Science';
 
-import type { Molecule, CategoricalBinary,CategoricalYesNo, CategoricalTernary } from '../../types/molecules.types';
+import type { Molecule, CategoricalTernary } from '../../types/molecules.types';
 
-// ─── Helpers visuais ────────────────────────────────────────────────────────
+// ─── Tipos internos ──────────────────────────────────────────────────────────
 
-const PropertyCard = ({
-  title,
-  value,
-  unit,
-  optimal,
-}: {
-  title: string;
-  value: string | number;
-  unit?: string;
-  optimal: boolean;
-}) => (
-  <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 flex flex-col justify-between">
-    <div className="flex justify-between items-start mb-2">
-      <Typography className="font-inter text-[10px] text-gray-400 font-bold uppercase tracking-wide">
-        {title}
-      </Typography>
-      {optimal
-        ? <CheckCircleOutlineIcon sx={{ fontSize: 14 }} className="text-green-500" />
-        : <WarningAmberIcon sx={{ fontSize: 14 }} className="text-amber-500" />}
+type RiskLevel = 'good' | 'medium' | 'bad';
+
+// ─── Paleta por domínio ──────────────────────────────────────────────────────
+
+const DOMAIN_COLORS = ['#f97316', '#8b5cf6', '#3b82f6', '#14b8a6', '#f43f5e']; // Laranja, Roxo, Azul, Teal, Rose
+const DOMAIN_NAMES  = ['Absorção', 'Distribuição', 'Metabolismo', 'Excreção', 'Toxicidade'];
+
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
+const toxToRisk = (v: CategoricalTernary): RiskLevel =>
+  v === 'Excelente' ? 'good' : v === 'Médio' ? 'medium' : 'bad';
+
+// Usando as cores semânticas padrão do projeto (Emerald, Amber, Rose)
+const BADGE_CLS: Record<RiskLevel, string> = {
+  good:   'bg-emerald-50 text-emerald-700 border-emerald-200',
+  medium: 'bg-amber-50 text-amber-700 border-amber-200',
+  bad:    'bg-rose-50 text-rose-700 border-rose-200',
+};
+
+const ROW_BG: Record<RiskLevel, string> = {
+  good:   'bg-emerald-50/50 border-emerald-100',
+  medium: 'bg-amber-50/50 border-amber-100',
+  bad:    'bg-rose-50/50 border-rose-100',
+};
+
+const ICON_BG: Record<RiskLevel, string> = {
+  good:   'bg-emerald-100 text-emerald-600',
+  medium: 'bg-amber-100 text-amber-600',
+  bad:    'bg-rose-100 text-rose-600',
+};
+
+// ─── Score ADMET por domínio (normalizado 0-1) ────────────────────────────
+
+const scoreDomains = (mol: Molecule): number[] => {
+  const abs = Math.min(1, (mol.absorptionPercent / 100) * 0.7 + (mol.caco2 === 'Excelente' ? 0.3 : 0));
+  const ppbScore = 1 - Math.abs(mol.ppb - 50) / 50;
+  const dist = Math.min(1, ppbScore * 0.5 + (mol.bbb === 'Excelente' ? 0.5 : mol.bbb === 'Médio' ? 0.3 : 0.1));
+  const cypCount = [mol.cyp1a2Substrate, mol.cyp2d6Substrate, mol.cyp3a4Substrate].filter(v => v === 'Sim').length;
+  const met = Math.max(0, 1 - cypCount / 3);
+  const halfScore = mol.tHalf >= 2 && mol.tHalf <= 24 ? 1 : mol.tHalf < 2 ? mol.tHalf / 2 : Math.max(0, 1 - (mol.tHalf - 24) / 48);
+  const exc = Math.min(1, halfScore * 0.6 + (mol.clPlasma < 30 ? 0.4 : mol.clPlasma < 80 ? 0.2 : 0));
+  const tox = Math.min(1, ((mol.ames === 'Excelente' ? 1 : mol.ames === 'Médio' ? 0.5 : 0) + (mol.hepato === 'Excelente' ? 1 : mol.hepato === 'Médio' ? 0.5 : 0) + (mol.herg === 'Excelente' ? 1 : mol.herg === 'Médio' ? 0.5 : 0)) / 3);
+
+  return [abs, dist, met, exc, tox];
+};
+
+// ─── Sub-componentes ─────────────────────────────────────────────────────────
+
+const Badge = ({ text, level }: { text: string; level: RiskLevel }) => (
+  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border font-inter shadow-sm ${BADGE_CLS[level]}`}>
+    {text}
+  </span>
+);
+
+const PropRow = ({ label, value, badge, tooltip }: { label: string; value?: string; badge?: { text: string; level: RiskLevel }; tooltip?: string; }) => (
+  <div className="flex justify-between items-center py-2.5 border-b border-slate-100 last:border-0 group">
+    <div className="flex items-center gap-1.5">
+      <span className="font-inter text-xs font-medium text-slate-500 group-hover:text-slate-700 transition-colors">{label}</span>
+      {tooltip && (
+        <Tooltip title={tooltip} placement="top">
+          <InfoOutlinedIcon sx={{ fontSize: 14 }} className="text-slate-300 hover:text-blue-500 cursor-help transition-colors" />
+        </Tooltip>
+      )}
     </div>
-    <div className="flex items-baseline gap-1">
-      <Typography className={`font-nunito_sans font-extrabold text-2xl leading-none ${optimal ? 'text-gray-900' : 'text-red-600'}`}>
-        {value}
-      </Typography>
-      {unit && <Typography className="font-inter text-xs text-gray-400">{unit}</Typography>}
-    </div>
+    {badge
+      ? <Badge text={badge.text} level={badge.level} />
+      : <span className="font-mono text-xs font-semibold text-slate-800">{value}</span>
+    }
   </div>
 );
 
-// Converte tox categórico para ícone + cor
+const DomainCard = ({ title, accentColor, children }: { title: string; accentColor: string; children: React.ReactNode; }) => (
+  <div className="bg-white border border-slate-200/80 rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden flex flex-col">
+    {/* Cabeçalho do Cartão com Fundo Tingido (1A = 10% de opacidade do Hex) */}
+    <div className="px-5 py-3 border-b border-slate-100 flex items-center gap-2.5" style={{ backgroundColor: `${accentColor}1A` }}>
+      <span className="w-2.5 h-2.5 rounded-full shadow-sm" style={{ background: accentColor }} />
+      <span className="font-inter text-xs font-bold uppercase tracking-wider" style={{ color: accentColor }}>
+        {title}
+      </span>
+    </div>
+    <div className="px-5 py-3 flex-1 flex flex-col justify-center">{children}</div>
+  </div>
+);
+
 const ToxRow = ({ label, value }: { label: string; value: CategoricalTernary }) => {
-  const isGood   = value === 'Excelente';
-  const isMedium = value === 'Médio';
-
-  const borderColor = isGood ? 'border-green-200 bg-green-50/60' : isMedium ? 'border-yellow-200 bg-yellow-50/60' : 'border-red-200 bg-red-50/60';
-  const Icon = isGood ? CheckCircleOutlineIcon : isMedium ? WarningAmberIcon : CancelOutlinedIcon;
-  const iconColor = isGood ? 'text-green-600' : isMedium ? 'text-yellow-600' : 'text-red-600';
-  const desc = isGood ? 'Nenhum risco detectado pelo modelo.' : isMedium ? 'Risco moderado — monitoramento recomendado.' : 'Risco elevado — cautela necessária.';
-
+  const level = toxToRisk(value);
+  const Icon = level === 'good' ? CheckCircleIcon : level === 'medium' ? WarningAmberIcon : CancelIcon;
   return (
-    <div className={`flex items-start gap-4 p-4 rounded-xl border ${borderColor}`}>
-      <div className={`p-1.5 rounded-full ${isGood ? 'bg-green-100' : isMedium ? 'bg-yellow-100' : 'bg-red-100'}`}>
-        <Icon sx={{ fontSize: 18 }} className={iconColor} />
+    <div className={`flex items-center gap-3 p-3 rounded-xl border mb-2 last:mb-0 transition-all hover:scale-[1.01] ${ROW_BG[level]}`}>
+      <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 shadow-sm ${ICON_BG[level]}`}>
+        <Icon sx={{ fontSize: 16 }} />
       </div>
-      <div>
-        <Typography className="font-nunito_sans font-bold text-gray-900 text-sm">
-          {label}: <span className="font-mono">{value}</span>
-        </Typography>
-        <Typography className="font-inter text-xs text-gray-500 mt-0.5">{desc}</Typography>
-      </div>
+      <span className="font-inter text-xs font-bold text-slate-800 flex-1">{label}</span>
+      <Badge text={value} level={level} />
     </div>
   );
 };
 
-const CypRow = ({ label, value }: { label: string; value: CategoricalYesNo }) => (
-  <div className="flex justify-between items-center py-2 border-b border-gray-50 last:border-0">
-    <Typography className="font-inter text-xs text-gray-500">{label}</Typography>
-    <span className={`px-2 py-0.5 text-[10px] font-bold rounded font-inter ${
-      value === 'Não' ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-yellow-50 text-yellow-700 border border-yellow-200'
-    }`}>
-      {value}
-    </span>
-  </div>
-);
+// ─── Score circular ───────────────────────────────────────────────────────────
 
-const AbsRow = ({ label, value }: { label: string; value: string }) => (
-  <div className="flex justify-between items-center py-2 border-b border-gray-50 last:border-0">
-    <Typography className="font-inter text-xs text-gray-500">{label}</Typography>
-    <Typography className="font-mono text-xs text-gray-800 font-medium">{value}</Typography>
+const CIRCUM = 2 * Math.PI * 36;
+
+const ScoreRing = ({ score }: { score: number }) => {
+  const offset = CIRCUM * (1 - score / 100);
+  const color  = score >= 70 ? '#2563eb' : score >= 45 ? '#f59e0b' : '#f43f5e';
+  const label  = score >= 70 ? 'Alta viabilidade' : score >= 45 ? 'Viabilidade moderada' : 'Baixa viabilidade';
+  return (
+    <div className="flex flex-col items-center gap-2 shrink-0">
+      <div className="relative w-24 h-24 drop-shadow-sm">
+        <svg width="96" height="96" viewBox="0 0 96 96" style={{ transform: 'rotate(-90deg)' }}>
+          <circle cx="48" cy="48" r="36" fill="none" stroke="#f1f5f9" strokeWidth="8" />
+          <circle
+            cx="48" cy="48" r="36" fill="none"
+            stroke={color} strokeWidth="8"
+            strokeDasharray={`${CIRCUM}`}
+            strokeDashoffset={offset}
+            strokeLinecap="round"
+            className="transition-all duration-1000 ease-out"
+          />
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center pt-1">
+          <span className="font-nunito_sans font-extrabold text-3xl leading-none text-slate-800">{score}</span>
+          <span className="font-inter text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">ADMET</span>
+        </div>
+      </div>
+      <span className="font-inter text-xs font-medium text-slate-500 text-center leading-tight max-w-[110px]">{label}</span>
+    </div>
+  );
+};
+
+// ─── Radar ADMET ──────────────────────────────────────────────────────────────
+const toRad = (deg: number) => (deg * Math.PI) / 180;
+const CX = 130, CY = 120, RMAX = 88;
+const RADAR_AXES = [
+  { label: 'Absorção',  angle: -90  },
+  { label: 'Dist.',     angle: -18  },
+  { label: 'Metab.',    angle:  54  },
+  { label: 'Excreção',  angle: 126  },
+  { label: 'Toxicidade',angle: 198  },
+];
+const axPt = (angle: number, r: number) => ({ x: CX + r * Math.cos(toRad(angle)), y: CY + r * Math.sin(toRad(angle)) });
+
+const AdmetRadar = ({ scores }: { scores: number[] }) => {
+  const pts = RADAR_AXES.map((ax, i) => axPt(ax.angle, scores[i] * RMAX));
+  const path = pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ') + 'Z';
+
+  return (
+    <svg width="100%" viewBox="0 0 260 248" className="block mx-auto drop-shadow-sm">
+      {[1, 0.66, 0.33].map(level => {
+        const wpts = RADAR_AXES.map(ax => axPt(ax.angle, level * RMAX));
+        const wd = wpts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ') + 'Z';
+        return <path key={level} d={wd} fill={level === 1 ? '#f8fafc' : 'none'} stroke="#e2e8f0" strokeWidth="1" />;
+      })}
+      {RADAR_AXES.map(ax => {
+        const tip = axPt(ax.angle, RMAX);
+        return <line key={ax.label} x1={CX} y1={CY} x2={tip.x.toFixed(1)} y2={tip.y.toFixed(1)} stroke="#e2e8f0" strokeWidth="1" />;
+      })}
+      <path d={path} fill="rgba(37,99,235,0.15)" stroke="#2563eb" strokeWidth="2.5" strokeLinejoin="round" className="transition-all duration-700" />
+      {pts.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r="5" fill={DOMAIN_COLORS[i]} stroke="#fff" strokeWidth="2" />)}
+      {RADAR_AXES.map((ax) => {
+        const tip = axPt(ax.angle, RMAX + 22);
+        return (
+          <text key={ax.label} x={tip.x.toFixed(1)} y={tip.y.toFixed(1)} fontSize="11" fill="#64748b" fontWeight="700" textAnchor="middle" dominantBaseline="central" fontFamily="Inter, sans-serif">
+            {ax.label}
+          </text>
+        );
+      })}
+    </svg>
+  );
+};
+
+const ScoreBar = ({ label, score, color }: { label: string; score: number; color: string; }) => (
+  <div className="flex items-center gap-3 group">
+    <span className="font-inter text-xs font-semibold text-slate-500 w-24 shrink-0 group-hover:text-slate-700 transition-colors">{label}</span>
+    <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden shadow-inner">
+      <div className="h-full rounded-full transition-all duration-1000 ease-out" style={{ width: `${score * 100}%`, background: color }} />
+    </div>
+    <span className="font-mono text-xs font-bold text-slate-600 w-8 text-right bg-slate-50 py-0.5 rounded">
+      {Math.round(score * 100)}
+    </span>
   </div>
 );
 
@@ -93,170 +205,171 @@ interface MoleculeDetailProps {
 }
 
 const MoleculeDetail = ({ molecule: mol }: MoleculeDetailProps) => {
-  const formula = `MW ${mol.mw.toFixed(1)} · TPSA ${mol.tpsa.toFixed(1)} Å²`;
+  const [copied, setCopied] = useState(false);
+  const domainScores = scoreDomains(mol);
+  const admetScore   = Math.round(domainScores.reduce((a, b) => a + b, 0) / domainScores.length * 100);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(mol.smiles);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
 
   return (
-    <div className="w-full flex flex-col lg:flex-row gap-8 animate-fade-in-up">
+    <div className="w-full flex flex-col gap-6 animate-fade-in pb-12 px-2">
 
-      {/* COLUNA ESQUERDA: Visualizações */}
-      <div className="w-full lg:w-1/3 flex flex-col gap-6">
+      {/* ── HERO ─────────────────────────────────────────────────────────── */}
+      <div className="bg-white border border-slate-200/80 rounded-2xl p-6 flex flex-col md:flex-row items-center md:items-start gap-6 shadow-sm relative overflow-hidden">
+        {/* Decorative background blur */}
+        <div className="absolute -top-10 -right-10 w-40 h-40 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
 
-        {/* Estrutura 2D */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-6 flex flex-col items-center justify-center min-h-[240px] relative overflow-hidden group">
-          <Typography className="absolute top-4 left-4 font-inter text-[10px] font-bold text-gray-400 uppercase tracking-wide">
-            Estrutura 2D
-          </Typography>
+        {/* Imagem */}
+        <div className="w-28 h-28 rounded-2xl border border-slate-100 bg-white shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] flex items-center justify-center shrink-0 z-10">
           {mol.imgUrl ? (
-            <img
-              src={mol.imgUrl}
-              alt={mol.name}
-              className="max-w-full max-h-[180px] object-contain mix-blend-multiply opacity-90 group-hover:scale-105 transition-transform duration-500"
-            />
+            <img src={mol.imgUrl} alt={mol.name} className="w-24 h-24 object-contain mix-blend-multiply opacity-90 hover:scale-105 transition-transform" />
           ) : (
-            <div className="text-gray-200">
-              <ScienceIcon sx={{ fontSize: 80 }} />
-            </div>
+            <ScienceIcon sx={{ fontSize: 48 }} className="text-slate-200" />
           )}
         </div>
 
-        {/* QED Score */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-6 flex flex-col items-center justify-center min-h-[160px] relative">
-          <Typography className="absolute top-4 left-4 font-inter text-[10px] font-bold text-gray-400 uppercase tracking-wide">
-            QED Score
-          </Typography>
-          <Typography className={`font-nunito_sans font-extrabold text-5xl leading-none mb-2 ${
-            mol.qed >= 0.7 ? 'text-teal-500' : mol.qed >= 0.4 ? 'text-amber-500' : 'text-red-500'
-          }`}>
-            {mol.qed.toFixed(2)}
-          </Typography>
-          <Typography className="font-inter text-sm text-gray-400">
-            {mol.qed >= 0.7 ? 'Alta viabilidade' : mol.qed >= 0.4 ? 'Viabilidade moderada' : 'Baixa viabilidade'}
-          </Typography>
-          <div className="mt-4 w-full px-4">
-            <div className="h-2 w-full bg-gray-100 rounded-full overflow-hidden">
+        {/* Info */}
+        <div className="flex-1 min-w-0 flex flex-col items-center md:items-start z-10">
+          <div className="flex items-end gap-3">
+            <h1 className="font-nunito_sans font-black text-3xl text-slate-800 tracking-tight">
+              {mol.name}
+            </h1>
+            <span className="font-mono text-sm font-bold text-slate-400 mb-1.5">{mol.id}</span>
+          </div>
+
+          {/* SMILES */}
+          <div className="flex items-center gap-2 mt-3 bg-slate-50/50 hover:bg-slate-50 border border-slate-200/60 rounded-lg pl-3 pr-1 py-1 w-fit max-w-full transition-colors">
+            <span className="font-mono text-[11px] font-medium text-slate-500 truncate max-w-[200px] sm:max-w-xs">{mol.smiles}</span>
+            <Tooltip title={copied ? 'Copiado!' : 'Copiar SMILES'}>
+              <IconButton size="small" onClick={handleCopy} className={`p-1.5 transition-colors ${copied ? 'bg-emerald-50 text-emerald-600' : 'hover:bg-blue-50 text-slate-400 hover:text-blue-600'}`}>
+                {copied ? <CheckCircleIcon sx={{ fontSize: 14 }} /> : <ContentCopyIcon sx={{ fontSize: 14 }} />}
+              </IconButton>
+            </Tooltip>
+          </div>
+
+          {/* Pills Físico-Químicas */}
+          <div className="flex flex-wrap justify-center md:justify-start gap-2 mt-4">
+            {[
+              { label: 'MW', val: `${mol.mw.toFixed(1)} g/mol` },
+              { label: 'LogP', val: mol.logp.toFixed(2) },
+              { label: 'TPSA', val: `${mol.tpsa.toFixed(1)} Å²` },
+              { label: 'QED', val: mol.qed.toFixed(2) },
+            ].map(t => (
+              <div key={t.label} className="flex items-center overflow-hidden rounded-md border border-slate-200 shadow-sm">
+                <span className="bg-slate-50 text-slate-500 font-inter text-[10px] font-bold px-2 py-1 uppercase tracking-wider">{t.label}</span>
+                <span className="bg-white text-slate-700 font-mono text-[11px] font-bold px-2.5 py-1">{t.val}</span>
+              </div>
+            ))}
+            
+            {/* MedChem Rules */}
+            <div className={`flex items-center overflow-hidden rounded-md border shadow-sm ${mol.lipinski === 'Pass' ? 'border-emerald-200' : 'border-rose-200'}`}>
+                <span className={`font-inter text-[10px] font-bold px-2 py-1 uppercase tracking-wider ${mol.lipinski === 'Pass' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>Lipinski</span>
+                <span className={`bg-white font-mono text-[11px] font-bold px-2.5 py-1 ${mol.lipinski === 'Pass' ? 'text-emerald-700' : 'text-rose-700'}`}>{mol.lipinski}</span>
+            </div>
+            <div className={`flex items-center overflow-hidden rounded-md border shadow-sm ${mol.pfizer === 'Pass' ? 'border-emerald-200' : 'border-rose-200'}`}>
+                <span className={`font-inter text-[10px] font-bold px-2 py-1 uppercase tracking-wider ${mol.pfizer === 'Pass' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>Pfizer</span>
+                <span className={`bg-white font-mono text-[11px] font-bold px-2.5 py-1 ${mol.pfizer === 'Pass' ? 'text-emerald-700' : 'text-rose-700'}`}>{mol.pfizer}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Score circular escondido em telas muito pequenas, visível de tablet pra cima */}
+        <div className="hidden md:block">
+          <ScoreRing score={admetScore} />
+        </div>
+      </div>
+
+      {/* ── GRID ADMET linha 1 ────────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <DomainCard title="Físico-Química" accentColor={DOMAIN_COLORS[2]}>
+          <PropRow label="Peso Molecular" value={`${mol.mw.toFixed(1)} g/mol`} />
+          <PropRow label="LogP"  value={mol.logp.toFixed(2)} />
+          <PropRow label="TPSA"  value={`${mol.tpsa.toFixed(1)} Å²`} />
+          <PropRow label="QED Score" badge={{ text: mol.qed.toFixed(2), level: mol.qed >= 0.7 ? 'good' : mol.qed >= 0.4 ? 'medium' : 'bad' }} />
+        </DomainCard>
+
+        <DomainCard title="Absorção" accentColor={DOMAIN_COLORS[0]}>
+          <PropRow label="HIA" value={`${mol.absorptionPercent}%`} />
+          <PropRow label="Caco-2" badge={{ text: mol.caco2, level: mol.caco2 === 'Excelente' ? 'good' : 'bad' }} />
+          <PropRow label="Inibidor P-gp" badge={{ text: mol.pgpInhibitor, level: mol.pgpInhibitor === 'Excelente' ? 'good' : mol.pgpInhibitor === 'Médio' ? 'medium' : 'bad' }} />
+        </DomainCard>
+
+        <DomainCard title="Distribuição" accentColor={DOMAIN_COLORS[1]}>
+          <PropRow label="BBB" tooltip="Para alvos periféricos, baixa penetração BBB é excelente." badge={{ text: mol.bbb, level: mol.bbb === 'Ruim' ? 'good' : mol.bbb === 'Médio' ? 'medium' : 'bad' }} />
+          <PropRow label="PPB" value={`${mol.ppb}%`} />
+          <PropRow label="Fração livre (Fu)" value={`${mol.fu}%`} />
+        </DomainCard>
+      </div>
+
+      {/* ── GRID ADMET linha 2 ────────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <DomainCard title="Metabolismo" accentColor={DOMAIN_COLORS[2]}>
+          <PropRow label="CYP1A2" badge={{ text: mol.cyp1a2Substrate === 'Não' ? 'Não substrato' : 'Substrato', level: mol.cyp1a2Substrate === 'Não' ? 'good' : 'bad' }} />
+          <PropRow label="CYP2D6" badge={{ text: mol.cyp2d6Substrate === 'Não' ? 'Não substrato' : 'Substrato', level: mol.cyp2d6Substrate === 'Não' ? 'good' : 'bad' }} />
+          <PropRow label="CYP3A4" badge={{ text: mol.cyp3a4Substrate === 'Não' ? 'Não substrato' : 'Substrato', level: mol.cyp3a4Substrate === 'Não' ? 'good' : 'bad' }} />
+        </DomainCard>
+
+        <DomainCard title="Excreção" accentColor={DOMAIN_COLORS[3]}>
+          <PropRow label="CL plasmático" value={`${mol.clPlasma} mL/min/kg`} />
+          <PropRow label="Meia-vida (T½)" value={`${mol.tHalf} h`} />
+        </DomainCard>
+
+        <DomainCard title="Toxicidade" accentColor={DOMAIN_COLORS[4]}>
+          <ToxRow label="Mutagênico (AMES)" value={mol.ames} />
+          <ToxRow label="Cardiotóxico (hERG)" value={mol.herg} />
+          <ToxRow label="Hepatotóxico"  value={mol.hepato} />
+        </DomainCard>
+      </div>
+
+      {/* ── RADAR + SCORE BARS ────────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        {/* Radar */}
+        <div className="bg-white border border-slate-200/80 shadow-sm rounded-2xl p-6">
+          <div className="mb-4 text-center">
+            <h3 className="font-nunito_sans font-extrabold text-slate-800 text-lg">Impressão Digital ADMET</h3>
+            <p className="font-inter text-xs text-slate-400 mt-1">Perfil multi-domínio normalizado — quanto maior a área, melhor.</p>
+          </div>
+          <AdmetRadar scores={domainScores} />
+        </div>
+
+        {/* Barras de score */}
+        <div className="bg-white border border-slate-200/80 shadow-sm rounded-2xl p-6 flex flex-col">
+          <div className="mb-6">
+            <h3 className="font-nunito_sans font-extrabold text-slate-800 text-lg">Desempenho por Categoria</h3>
+            <p className="font-inter text-xs text-slate-400 mt-1">Viabilidade farmacocinética pontuada de 0 a 100.</p>
+          </div>
+
+          <div className="flex flex-col gap-5 flex-1 justify-center">
+            {DOMAIN_NAMES.map((name, i) => (
+              <ScoreBar key={name} label={name} score={domainScores[i]} color={DOMAIN_COLORS[i]} />
+            ))}
+          </div>
+
+          {/* Score global */}
+          <div className="mt-8 pt-5 border-t border-slate-100 flex items-end justify-between">
+            <div>
+              <p className="font-inter text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Score ADMET Global</p>
+              <p className="font-nunito_sans font-black text-4xl text-slate-800 leading-none mt-1">
+                {admetScore}
+                <span className="font-inter text-base font-bold text-slate-300 ml-1">/100</span>
+              </p>
+            </div>
+            <div className="w-32 h-2.5 bg-slate-100 rounded-full overflow-hidden shadow-inner mb-1.5">
               <div
-                className={`h-full rounded-full transition-all ${
-                  mol.qed >= 0.7 ? 'bg-teal-400' : mol.qed >= 0.4 ? 'bg-amber-400' : 'bg-red-400'
-                }`}
-                style={{ width: `${mol.qed * 100}%` }}
+                className="h-full rounded-full transition-all duration-1000 ease-out"
+                style={{ width: `${admetScore}%`, background: admetScore >= 70 ? '#2563eb' : admetScore >= 45 ? '#f59e0b' : '#f43f5e' }}
               />
             </div>
           </div>
         </div>
-
-        {/* Absorção + Distribuição condensados */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-5">
-          <Typography className="font-inter text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-3">
-            Absorção
-          </Typography>
-          <AbsRow label="HIA (%)" value={`${mol.absorptionPercent}%`} />
-          <AbsRow label="Caco-2" value={mol.caco2} />
-          <AbsRow label="Inibidor P-gp" value={mol.pgpInhibitor} />
-          <Divider className="my-3" />
-          <Typography className="font-inter text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-3">
-            Distribuição
-          </Typography>
-          <AbsRow label="BBB" value={mol.bbb} />
-          <AbsRow label="PPB (%)" value={`${mol.ppb}%`} />
-          <AbsRow label="Fu (%)" value={`${mol.fu}%`} />
-          <Divider className="my-3" />
-          <Typography className="font-inter text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-3">
-            Excreção
-          </Typography>
-          <AbsRow label="CL Plasmático" value={`${mol.clPlasma} mL/min/kg`} />
-          <AbsRow label="T½" value={`${mol.tHalf} h`} />
-        </div>
-
       </div>
 
-      {/* COLUNA DIREITA: Dados e Alertas */}
-      <div className="w-full lg:w-2/3 flex flex-col gap-6">
-
-        {/* Cabeçalho */}
-        <div>
-          <div className="flex items-center gap-3 mb-2 flex-wrap">
-            <Typography variant="h4" className="font-nunito_sans font-extrabold text-gray-900 leading-tight">
-              {mol.name}
-            </Typography>
-            <span className="bg-blue-50 text-blue-700 text-xs font-bold px-2.5 py-1 rounded-lg font-inter border border-blue-100">
-              {formula}
-            </span>
-          </div>
-          <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-xl border border-gray-200 w-fit">
-            <Typography className="font-mono text-xs text-gray-700 max-w-[300px] truncate">
-              {mol.smiles}
-            </Typography>
-            <Tooltip title="Copiar SMILES">
-              <IconButton size="small" onClick={() => navigator.clipboard.writeText(mol.smiles)}>
-                <ContentCopyIcon sx={{ fontSize: 14 }} className="text-gray-400 hover:text-blue-600" />
-              </IconButton>
-            </Tooltip>
-          </div>
-        </div>
-
-        <Divider />
-
-        {/* Propriedades Físico-Químicas */}
-        <div>
-          <div className="flex items-center gap-2 mb-4">
-            <Typography variant="h6" className="font-nunito_sans font-bold text-gray-800">
-              Propriedades Físico-Químicas
-            </Typography>
-            <Tooltip title="Baseado na Regra dos 5 de Lipinski para biodisponibilidade oral.">
-              <InfoOutlinedIcon sx={{ fontSize: 16 }} className="text-gray-300 cursor-help" />
-            </Tooltip>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <PropertyCard title="Peso Molecular" value={mol.mw.toFixed(1)} unit="g/mol" optimal={mol.mw <= 500} />
-            <PropertyCard title="LogP"           value={mol.logp.toFixed(2)}             optimal={mol.logp <= 5 && mol.logp >= -2} />
-            <PropertyCard title="TPSA"           value={mol.tpsa.toFixed(1)} unit="Å²"   optimal={mol.tpsa <= 140} />
-            <PropertyCard title="QED Score"      value={mol.qed.toFixed(2)}              optimal={mol.qed >= 0.5} />
-          </div>
-        </div>
-
-        {/* Metabolismo CYP */}
-        <div>
-          <Typography variant="h6" className="font-nunito_sans font-bold text-gray-800 mb-3">
-            Perfil Metabólico CYP450
-          </Typography>
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <CypRow label="Substrato CYP1A2" value={mol.cyp1a2Substrate} />
-            <CypRow label="Substrato CYP2D6" value={mol.cyp2d6Substrate} />
-            <CypRow label="Substrato CYP3A4" value={mol.cyp3a4Substrate} />
-          </div>
-        </div>
-
-        <Divider />
-
-        {/* Toxicidade */}
-        <div>
-          <Typography variant="h6" className="font-nunito_sans font-bold text-gray-800 mb-3">
-            Perfil de Segurança e Toxicidade
-          </Typography>
-          <div className="flex flex-col gap-2">
-            <ToxRow label="Mutagenicidade (AMES)" value={mol.ames} />
-            <ToxRow label="Cardiotoxicidade (hERG)" value={mol.herg} />
-            <ToxRow label="Hepatotoxicidade" value={mol.hepato} />
-          </div>
-        </div>
-
-        {/* Druglikeness pills */}
-        <div className="flex gap-2 flex-wrap">
-          <span className={`px-4 py-1.5 text-sm font-bold rounded-xl border font-nunito_sans ${
-            mol.lipinski === 'Pass' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'
-          }`}>
-            Lipinski: {mol.lipinski}
-          </span>
-          <span className={`px-4 py-1.5 text-sm font-bold rounded-xl border font-nunito_sans ${
-            mol.pfizer === 'Pass' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'
-          }`}>
-            Pfizer 3/75: {mol.pfizer}
-          </span>
-        </div>
-
-      </div>
     </div>
   );
 };
 
-export default MoleculeDetail;
+export default MoleculeDetail; 

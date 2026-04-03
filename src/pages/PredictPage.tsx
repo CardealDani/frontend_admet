@@ -21,7 +21,8 @@ import { Header } from '../components/Header';
 type Phase = 'input' | 'loading' | 'results';
 
 const PredictPage = () => {
-  const [phase, setPhase] = useState<Phase>('results');
+  // CORREÇÃO: O estado inicial deve ser 'input'
+  const [phase, setPhase] = useState<Phase>('input');
 
   const [activeTab, setActiveTab] = useState<'smiles' | 'file'>('file');
   const [smilesInput, setSmilesInput] = useState('');
@@ -37,18 +38,29 @@ const PredictPage = () => {
   const isProgrammaticBack = useRef(false);
 
   // =========================================================================
-  // MÁGICA DO HISTÓRICO: Interceptando o botão Voltar do Navegador
-  // =========================================================================
+  // HISTORY TRAPPING: Interceptando o botão Voltar do Navegador
+
   useEffect(() => {
-    const handlePopState = () => {
-      // Se fomos nós que mandamos voltar via código, apenas ignora
+    const handlePopState = (e: PopStateEvent) => {
+      // Se fomos nós que mandamos voltar via código (ex: confirmou o reset), ignora.
       if (isProgrammaticBack.current) {
         isProgrammaticBack.current = false;
         return;
       }
-
-      // Se o usuário clicou no voltar do navegador durante os resultados:
+      
       if (phase === 'results') {
+        const newPage = e.state?.page;
+
+        // MÁGICA: Se o usuário navegou entre a tabela ('results') e o detalhe ('detail'),
+        // seja avançando ou voltando, NÃO mostramos o aviso. Deixamos o ResultsLayout lidar.
+        if (newPage === 'results' || newPage === 'detail') {
+          return;
+        }
+        
+        // Se NÃO for nenhum dos dois, o usuário estava na Tabela e apertou "Voltar" 
+        // tentando sair da análise completamente!
+        // Empurramos o estado de volta para prender ele na tabela, e mostramos o Modal.
+        window.history.pushState({ page: 'results' }, '', window.location.pathname);
         setPendingAction('browser_back');
         setShowWarningModal(true);
       }
@@ -57,8 +69,8 @@ const PredictPage = () => {
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, [phase]);
+  // =========================================================================
 
-  // Função para capturar o arquivo
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       setUploadedFile(e.target.files[0]);
@@ -78,48 +90,44 @@ const PredictPage = () => {
     }, 100);
   };
 
-  // Quando o usuário clica no botão "Nova Análise" do nosso layout
+  // Quando o usuário clica no botão "Nova Predição" da UI
   const handleResetRequest = () => {
     setPendingAction('button_reset');
     setShowWarningModal(true);
   };
 
-  // Ação: Usuário confirmou que quer perder os dados
+  // Ação: Usuário confirmou que quer perder os dados e voltar
   const handleConfirmReset = () => {
     setShowWarningModal(false);
     setPhase('input');
     setSmilesInput('');
     setUploadedFile(null);
 
-    // Se ele clicou no nosso botão UI, precisamos limpar o histórico que criamos
-    if (pendingAction === 'button_reset') {
-      isProgrammaticBack.current = true;
-      window.history.back();
-    }
+    // Como confirmamos a saída, precisamos remover aquele registro falso 
+    // que empurramos no histórico para não quebrar a navegação futura.
+    isProgrammaticBack.current = true;
+    window.history.back();
+    
     setPendingAction(null);
   };
 
   // Ação: Usuário desistiu de voltar
   const handleCancelReset = () => {
     setShowWarningModal(false);
-
-    // Se ele tentou voltar pelo navegador e desistiu, o navegador já alterou a URL. 
-    // Precisamos recriar o estado do histórico para mantê-lo na página.
-    if (pendingAction === 'browser_back') {
-      window.history.pushState({ page: 'results' }, '', window.location.pathname);
-    }
+    // Como nós já prendemos o usuário recriando o state lá no `handlePopState`,
+    // não precisamos fazer mais nada aqui. Ele continua seguro na tela de resultados.
     setPendingAction(null);
   };
 
-
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 overflow-hidden">
-      {phase === 'results' && (
-        <AppHeader onNewAnalysis={phase === 'results' ? handleResetRequest : handleConfirmReset} />
-      ) || (<Header />)}
+      {phase === 'results' ? (
+        <AppHeader onNewAnalysis={handleResetRequest} />
+      ) : (
+        <Header />
+      )}
 
-      {/* Como o novo header é mais fino (h-16), ajustamos os paddings do main */}
-      <main className={`flex-grow flex flex-col w-full ${phase === 'results' ? 'pt-16' : 'pt-24 pb-12 max-w-7xl mx-auto px-6 items-center justify-center'}`}>
+      <main className={`flex-grow flex flex-col w-full ${phase === 'results' ? 'pt-16' : 'pt-24 max-w-7xl mx-auto px-6 items-center justify-center'}`}>
 
         {/* FASE 1: INPUT */}
         {phase === 'input' && (
@@ -247,7 +255,7 @@ const PredictPage = () => {
         {/* FASE 3: RESULTADOS */}
         {phase === 'results' && (
           <ResultsLayout
-            onBack={handleResetRequest} // Passamos a função que aciona o modal, não o reset direto
+            onBack={handleResetRequest}
             isBatch={activeTab === 'file'}
           />
         )}
@@ -261,33 +269,27 @@ const PredictPage = () => {
       {/* ========================================================================= */}
       {/* MODAL DE CONFIRMAÇÃO (POPUP)                                              */}
       {/* ========================================================================= */}
-      {/* ========================================================================= */}
-      {/* MODAL DE CONFIRMAÇÃO (POPUP)                                              */}
-      {/* ========================================================================= */}
       <Dialog
         open={showWarningModal}
         onClose={handleCancelReset}
-        // SlotProps permite adicionar aquele fundo levemente desfocado muito elegante
         slotProps={{
           backdrop: {
             sx: {
               backdropFilter: 'blur(3px)',
-              backgroundColor: 'rgba(15, 23, 42, 0.4)', // Fundo escuro sutil
+              backgroundColor: 'rgba(15, 23, 42, 0.4)',
             }
           }
         }}
-        // PaperProps controla a "caixa branca" do modal usando o sistema do MUI
         PaperProps={{
           sx: {
-            borderRadius: 4, // Bordas bem arredondadas
-            p: 1, // Padding interno extra
+            borderRadius: 4,
+            p: 1,
             minWidth: { xs: '90vw', sm: '420px' },
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', // Sombra super suave
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
           }
         }}
       >
         <DialogTitle sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', pb: 1, pt: 4 }}>
-          {/* Ícone gigante e centralizado para chamar atenção ao risco */}
           <div className="bg-red-50 text-red-500 p-4 rounded-full mb-4">
             <WarningAmberIcon sx={{ fontSize: 48 }} />
           </div>

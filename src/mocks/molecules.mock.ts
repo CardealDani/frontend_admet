@@ -607,3 +607,4 @@ export const MOCK_MOLECULES: Molecule[] = [
     lipinski: 'Fail', pfizer: 'Pass', qed: 0.66,
   },
 ];
+

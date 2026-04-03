@@ -1,18 +1,16 @@
 // src/routes/AppRoutes.tsx
-import {BrowserRouter, Routes, Route } from 'react-router-dom';       // Crie um arquivo index.tsx ou Home.tsx dentro da pasta
-import PredictPage from '../pages/PredictPage';
-import HomePage from '../pages/HomePage';
-// import Dashboard from '../pages/Dashboard';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import HomePage          from '../pages/HomePage';
+import PredictPage       from '../pages/PredictPage';
+import MoleculeDetailPage from '../pages/MoleculeDetailPage';
 
-const AppRoutes = () => {
-  return (
-    <BrowserRouter basename={import.meta.env.BASE_URL}>
+const AppRoutes = () => (
+  <BrowserRouter basename={import.meta.env.BASE_URL}>
     <Routes>
-      <Route path="/" element={<HomePage />} />
-      <Route path="/analysis" element={<PredictPage />} />
+      <Route path="/"                          element={<HomePage />} />
+      <Route path="/analysis"                  element={<PredictPage />} />
     </Routes>
-    </BrowserRouter>
-  );
-};
+  </BrowserRouter>
+);
 
 export default AppRoutes;

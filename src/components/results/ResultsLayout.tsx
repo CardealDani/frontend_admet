@@ -1,5 +1,5 @@
 // src/components/results/ResultsLayout.tsx
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Button } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import ViewListIcon from '@mui/icons-material/ViewList';
@@ -9,6 +9,7 @@ import FilterSidebar from './FilterSidebar';
 import ResultsTable from './ResultsTable';
 import ResultsSummaryBar from './ResultsSummaryBar';
 import MoleculePreview from './MoleculePreview';
+import MoleculeDetailPage from '../../pages/MoleculeDetailPage';
 
 import { useAdmetFilters } from '../hooks/useAdmetFilters';
 import { useMoleculeFilter } from '../hooks/useMoleculeFilter';
@@ -23,24 +24,21 @@ interface ResultsLayoutProps {
 const ResultsLayout = ({ onBack, isBatch }: ResultsLayoutProps) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [selectedMolecule, setSelectedMolecule] = useState<Molecule | null>(null);
+  
+  // Estado que controla se a "Página" de detalhes está aberta
+  const [detailedMolecule, setDetailedMolecule] = useState<Molecule | null>(null);
 
   // ── Filtros ──────────────────────────────────────────────────────────────
-  // O FilterSidebar gerencia staged internamente e nos notifica via callback
-  // quando o usuário clica "Aplicar". Aqui guardamos o snapshot aplicado.
-  const { appliedFilters, applyFilters } = useAdmetFilters();
-
-  // Estado local para receber os filtros do sidebar via callback
+  const { appliedFilters } = useAdmetFilters();
   const [currentApplied, setCurrentApplied] = useState<AdmetFilters>(appliedFilters);
 
   const handleAppliedChange = useCallback((filters: AdmetFilters) => {
-    console.log("Received applied filters from sidebar:", filters);
     setCurrentApplied(filters);
   }, []);
 
   // ── Dados filtrados ───────────────────────────────────────────────────────
   const { filteredMolecules, totalCount, filteredCount } = useMoleculeFilter(currentApplied);
 
-  // ── Efeito para single molecule ───────────────────────────────────────────
   React.useEffect(() => {
     if (!isBatch && filteredMolecules.length > 0) {
       setSelectedMolecule(filteredMolecules[0]);
@@ -48,11 +46,36 @@ const ResultsLayout = ({ onBack, isBatch }: ResultsLayoutProps) => {
     }
   }, [isBatch, filteredMolecules]);
 
+  // =======================================================================
+  // HISTORY SYNC: Escuta o botão Voltar E Avançar do navegador internamente
+  // =======================================================================
+  useEffect(() => {
+    const handlePopState = (e: PopStateEvent) => {
+      const pageState = e.state?.page;
+
+      if (pageState === 'detail' && e.state?.molId) {
+        // CÁLCULO DE AVANÇAR: O usuário apertou "Avançar" no navegador
+        // Nós pegamos o ID salvo no histórico e restauramos a tela de detalhes.
+        const molToRestore = filteredMolecules.find(m => m.id === e.state.molId);
+        if (molToRestore) {
+          setDetailedMolecule(molToRestore);
+        }
+      } else if (pageState === 'results') {
+        // CÁLCULO DE VOLTAR: O usuário apertou "Voltar" enquanto via os detalhes.
+        // O estado voltou para 'results', então fechamos os detalhes para revelar a tabela.
+        setDetailedMolecule(null);
+      }
+    };
+    
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, [filteredMolecules]);
+  
   // ── Export CSV simples ────────────────────────────────────────────────────
   const handleExportCsv = () => {
     const headers = ['ID', 'Nome', 'SMILES', 'MW', 'LogP', 'TPSA', 'Lipinski', 'AMES', 'Hepato', 'hERG'];
     const rows = filteredMolecules.map(m =>
-      [m.id, m.name, m.smiles, m.mw, m.logp, m.tpsa, m.lipinski, m.ames, m.hepato, m.herg].join(',')
+      [m.id, m.name, m.smiles, m.mw, m.logp, m.tpsa, m.lipinski, m.ames[1], m.hepato[1], m.herg[1]].join(',')
     );
     const csv = [headers.join(','), ...rows].join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -64,10 +87,22 @@ const ResultsLayout = ({ onBack, isBatch }: ResultsLayoutProps) => {
     URL.revokeObjectURL(url);
   };
 
+  // Se houver uma detailedMolecule, renderizamos a página inteira de detalhes.
+  if (detailedMolecule) {
+    return (
+      <MoleculeDetailPage 
+        molecule={detailedMolecule} 
+        onBack={() => {
+          // Em vez de apenas setar 'null', nós usamos a API do navegador para voltar, 
+          // disparando o popstate e mantendo o histórico perfeito.
+          window.history.back();
+        }} 
+      />
+    );
+  }
+
   return (
     <div className="w-full flex h-[calc(100vh-65px)] animate-fade-in bg-gray-50 mt-[-2rem] md:mt-0 overflow-hidden">
-
-      {/* PAINEL ESQUERDO: FILTROS */}
       {isBatch && (
         <aside
           className={`bg-white flex flex-col h-full shadow-[2px_0_8px_-4px_rgba(0,0,0,0.05)] z-20 shrink-0 overflow-hidden transition-all duration-300 ease-in-out border-r border-gray-200 ${
@@ -84,12 +119,10 @@ const ResultsLayout = ({ onBack, isBatch }: ResultsLayoutProps) => {
         </aside>
       )}
 
-      {/* PAINEL CENTRAL: TABELA */}
       <main className="flex-1 flex flex-col h-full overflow-hidden relative bg-slate-50">
         <div className="flex-1 p-6 h-full flex flex-col min-h-0">
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 flex flex-col h-full overflow-hidden">
-
-            {/* TOPBAR */}
+            
             <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center shrink-0">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-blue-50 text-blue-600">
@@ -124,13 +157,11 @@ const ResultsLayout = ({ onBack, isBatch }: ResultsLayoutProps) => {
               </div>
             </div>
 
-            {/* SUMMARY BAR */}
             <ResultsSummaryBar
               filteredCount={filteredCount}
               totalCount={totalCount}
             />
 
-            {/* TABELA */}
             <div className="flex-1 overflow-hidden min-h-0">
               <ResultsTable
                 molecules={filteredMolecules}
@@ -138,7 +169,6 @@ const ResultsLayout = ({ onBack, isBatch }: ResultsLayoutProps) => {
                 selectedMolId={selectedMolecule?.id ?? null}
               />
             </div>
-
           </div>
         </div>
       </main>
@@ -153,7 +183,11 @@ const ResultsLayout = ({ onBack, isBatch }: ResultsLayoutProps) => {
           <MoleculePreview
             molecule={selectedMolecule}
             onClose={() => setSelectedMolecule(null)}
-            onViewFullReport={mol => console.log('Ver relatório completo:', mol.id)}
+            onViewFullReport={mol => {
+              // A MÁGICA 2: Salvamos o ID da molécula junto com a "página" no histórico
+              window.history.pushState({ page: 'detail', molId: mol.id }, '', window.location.pathname);
+              setDetailedMolecule(mol);
+            }} 
           />
         )}
       </aside>
