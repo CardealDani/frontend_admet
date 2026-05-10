@@ -14,8 +14,9 @@ import KeyboardIcon from '@mui/icons-material/Keyboard';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 
-// IMPORTAÇÃO DO NOVO LAYOUT DE RESULTADOS
+// IMPORTAÇÃO DOS LAYOUTS DE RESULTADOS
 import ResultsLayout from '../components/results/ResultsLayout';
+import SingleMoleculeLayout from '../components/results/SingleMoleculeLayout';
 import { Header } from '../components/Header';
 
 type Phase = 'input' | 'loading' | 'results';
@@ -131,7 +132,7 @@ const PredictPage = () => {
 
         {/* FASE 1: INPUT */}
         {phase === 'input' && (
-          <div className="w-full flex flex-col items-center justify-center animate-fade-in-up h-full">
+          <div className="w-full flex flex-col items-center justify-center animate-fade-in-up h-full p-10">
             <div className="text-center mb-10 max-w-2xl">
               <Typography variant="h4" className="font-nunito_sans font-bold text-gray-900 mb-3">
                 Nova <span className="text-blue-600">Análise ADMET</span>
@@ -252,11 +253,18 @@ const PredictPage = () => {
           </div>
         )}
 
-        {/* FASE 3: RESULTADOS */}
-        {phase === 'results' && (
+        {/* FASE 3: RESULTADOS — single (SMILES) ou batch (arquivo) */}
+        {phase === 'results' && activeTab === 'smiles' && (
+          <SingleMoleculeLayout
+            smiles={smilesInput}
+            onBack={handleResetRequest}
+          />
+        )}
+
+        {phase === 'results' && activeTab === 'file' && (
           <ResultsLayout
             onBack={handleResetRequest}
-            isBatch={activeTab === 'file'}
+            isBatch={true}
           />
         )}
 

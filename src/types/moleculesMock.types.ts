@@ -5,16 +5,16 @@
 
 // Tipos base para garantir o "Single Source of Truth"
 // 1. Primeiro definimos os Labels exatos que a UI e os Filtros esperam
-export type BinaryLabel  = 'Excelente' | 'Ruim';
-export type YesNoLabel   = 'Sim' | 'Não';
+export type BinaryLabel = 'Excelente' | 'Ruim';
+export type YesNoLabel = 'Sim' | 'Não';
 export type TernaryLabel = 'Excelente' | 'Médio' | 'Ruim';
-export type PassFail     = 'Pass' | 'Fail';
+export type PassFail = 'Pass' | 'Fail';
 
 // 2. Agora criamos as Tuplas: [valorCru, classificacao]
 // Exemplo prático vindo do Back: [0.15, 'Excelente'] ou [0.82, 'Ruim']
-export type CategoricalBinary  = [number, BinaryLabel];
-export type CategoricalYesNo   = [number, YesNoLabel];
-export type CategoricalTernary = [number, TernaryLabel];
+export type CategoricalBinary = [number, BinaryLabel];
+export type CategoricalYesNo = [number, YesNoLabel];
+export type CategoryTernary = [number, TernaryLabel];
 
 export interface Molecule {
   // Identificação
@@ -31,10 +31,10 @@ export interface Molecule {
   // Absorção
   absorptionPercent: number;       // % HIA
   caco2: CategoricalBinary;        // 'Excelente' | 'Ruim'  (threshold -5.15)
-  pgpInhibitor: CategoricalTernary;// 'Excelente' | 'Médio' | 'Ruim'
+  pgpInhibitor: CategoryTernary;// 'Excelente' | 'Médio' | 'Ruim'
 
   // Distribuição
-  bbb: CategoricalTernary;         // invertido: Baixa penetração = Excelente (alvo periférico)
+  bbb: CategoryTernary;         // invertido: Baixa penetração = Excelente (alvo periférico)
   ppb: number;                     // %
   fu: number;                      // % fração livre
 
@@ -48,9 +48,9 @@ export interface Molecule {
   tHalf: number;     // horas
 
   // Toxicidade (0 a 0.3 = Excelente/Seguro, 0.7 a 1 = Ruim/Tóxico)
-  ames: CategoricalTernary;   // 'Excelente' | 'Médio' | 'Ruim'
-  hepato: CategoricalTernary; // 'Excelente' | 'Médio' | 'Ruim'
-  herg: CategoricalTernary;   // 'Excelente' | 'Médio' | 'Ruim'
+  ames: CategoryTernary;   // 'Excelente' | 'Médio' | 'Ruim'
+  hepato: CategoryTernary; // 'Excelente' | 'Médio' | 'Ruim'
+  herg: CategoryTernary;   // 'Excelente' | 'Médio' | 'Ruim'
 
   // MedChem
   lipinski: PassFail; // 'Pass' | 'Fail'

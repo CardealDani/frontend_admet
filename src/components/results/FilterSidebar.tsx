@@ -1,12 +1,10 @@
 // src/components/results/FilterSidebar.tsx
-// Orquestrador puro: monta os hooks, distribui props, não contém lógica de negócio.
-
 import { Typography, IconButton, Tooltip, Badge } from '@mui/material';
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import { LuFilter } from 'react-icons/lu';
 
-import { useAdmetFilters }  from '../hooks/useAdmetFilters';
 import { usePresets }       from '../hooks/usePresets';
+import type { UseAdmetFiltersReturn } from '../hooks/useAdmetFilters';
 
 import { PresetBar }        from './filters/PresetBar';
 import { DiffBanner }       from './filters/DiffBanner';
@@ -18,18 +16,17 @@ import { DistributionSection } from './filters/sections/DistributionSection';
 import { MetabolismSection } from './filters/sections/MetabolismSection';
 import { ExcretionSection } from './filters/sections/ExcretionSection';
 import { ToxicitySection } from './filters/sections/ToxicitySection';
-import { defaultFilters } from '../../types/filters';
 
 interface FilterSidebarProps {
   isSidebarOpen: boolean;
   toggleSidebar: () => void;
-  // Callback para o ResultsLayout receber os filtros aplicados
-  onAppliedFiltersChange?: (filters: ReturnType<typeof useAdmetFilters>['appliedFilters']) => void;
+  // A MÁGICA 1: Recebemos o motor de filtros do pai
+  filterEngine: UseAdmetFiltersReturn; 
 }
 
-const FilterSidebar = ({ isSidebarOpen, toggleSidebar, onAppliedFiltersChange }: FilterSidebarProps) => {
+const FilterSidebar = ({ isSidebarOpen, toggleSidebar, filterEngine }: FilterSidebarProps) => {
 
-  // ── Hooks ────────────────────────────────────────────────────────────────
+  // Desestruturamos o motor que veio do pai
   const {
     stagedFilters,
     appliedFilters,
@@ -42,7 +39,7 @@ const FilterSidebar = ({ isSidebarOpen, toggleSidebar, onAppliedFiltersChange }:
     resetFilters,
     loadPreset,
     counts,
-  } = useAdmetFilters();
+  } = filterEngine;
 
   const {
     allPresets,
@@ -52,17 +49,9 @@ const FilterSidebar = ({ isSidebarOpen, toggleSidebar, onAppliedFiltersChange }:
     deleteUserPreset,
   } = usePresets();
 
-  // ── Handlers ─────────────────────────────────────────────────────────────
-
-  const handleApply = () => {
-    applyFilters();
-    onAppliedFiltersChange?.(stagedFilters);
-  };
-
-  const handleReset = () => {
-    resetFilters();
-    onAppliedFiltersChange?.(defaultFilters); // notifica com default
-  };
+  // Os Handlers agora só acionam o motor do pai. O ResultsLayout se atualiza sozinho!
+  const handleApply = () => applyFilters();
+  const handleReset = () => resetFilters();
 
   const handleSelectPreset = (preset: (typeof allPresets)[number]) => {
     loadPreset(preset.filters);
@@ -72,8 +61,6 @@ const FilterSidebar = ({ isSidebarOpen, toggleSidebar, onAppliedFiltersChange }:
   const handleSavePreset = (label: string) => {
     saveCurrentAsPreset(label, stagedFilters);
   };
-
-  // ────────────────────────────────────────────────────────────────────────
 
   return (
     <div className="w-full flex flex-col h-full animate-fade-in bg-gray-50">
@@ -112,7 +99,6 @@ const FilterSidebar = ({ isSidebarOpen, toggleSidebar, onAppliedFiltersChange }:
               Filtros
             </Typography>
 
-            {/* Badge de contagem inline */}
             <div
               className={`font-inter w-6 h-6 mx-2 rounded-full bg-blue-500 transition-opacity duration-200 flex items-center justify-center ${
                 isSidebarOpen && counts.total > 0 ? 'opacity-100' : 'opacity-0'
@@ -155,39 +141,14 @@ const FilterSidebar = ({ isSidebarOpen, toggleSidebar, onAppliedFiltersChange }:
           />
 
           <PfqMedChemSection
-            filters={stagedFilters}
-            count={counts.pfq}
-            updateFilter={updateFilter}
-            handleLipinskiToggle={handleLipinskiToggle}
-            handlePfizerToggle={handlePfizerToggle}
+            filters={stagedFilters} count={counts.pfq} updateFilter={updateFilter}
+            handleLipinskiToggle={handleLipinskiToggle} handlePfizerToggle={handlePfizerToggle}
           />
-          <AbsorptionSection
-            filters={stagedFilters}
-            count={counts.absorption}
-            updateFilter={updateFilter}
-            toggleArrayFilter={toggleArrayFilter}
-          />
-          <DistributionSection
-            filters={stagedFilters}
-            count={counts.distribution}
-            updateFilter={updateFilter}
-            toggleArrayFilter={toggleArrayFilter}
-          />
-          <MetabolismSection
-            filters={stagedFilters}
-            count={counts.metabolism}
-            toggleArrayFilter={toggleArrayFilter}
-          />
-          <ExcretionSection
-            filters={stagedFilters}
-            count={counts.excretion}
-            updateFilter={updateFilter}
-          />
-          <ToxicitySection
-            filters={stagedFilters}
-            count={counts.toxicity}
-            toggleArrayFilter={toggleArrayFilter}
-          />
+          <AbsorptionSection filters={stagedFilters} count={counts.absorption} updateFilter={updateFilter} toggleArrayFilter={toggleArrayFilter} />
+          <DistributionSection filters={stagedFilters} count={counts.distribution} updateFilter={updateFilter} toggleArrayFilter={toggleArrayFilter} />
+          <MetabolismSection filters={stagedFilters} count={counts.metabolism} toggleArrayFilter={toggleArrayFilter} />
+          <ExcretionSection filters={stagedFilters} count={counts.excretion} updateFilter={updateFilter} />
+          <ToxicitySection filters={stagedFilters} count={counts.toxicity} toggleArrayFilter={toggleArrayFilter} />
 
         </div>
 

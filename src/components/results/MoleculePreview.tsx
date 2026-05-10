@@ -1,168 +1,119 @@
 // src/components/results/MoleculePreview.tsx
-import { Typography, IconButton, Button, Divider, Tooltip } from '@mui/material';
+import { Typography, IconButton, Button, Tooltip } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import WarningRoundedIcon from '@mui/icons-material/WarningRounded';
 import CancelIcon from '@mui/icons-material/Cancel';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import LaunchIcon from '@mui/icons-material/Launch';
 
-import type { Molecule, CategoricalTernary } from '../../types/molecules.types';
-
-// ─── Helpers ────────────────────────────────────────────────────────────────
+import type { Molecule, ToxValue } from '../../types/molecules.types';
 
 type RiskLevel = 'good' | 'medium' | 'bad';
 
-const toxToRisk = (val: CategoricalTernary): RiskLevel => {
-  if (val === 'Excelente') return 'good';
-  if (val === 'Médio') return 'medium';
-  return 'bad';
-};
+const toxRisk = (v: ToxValue): RiskLevel =>
+  v.category === 'Excelente' ? 'good' : v.category === 'Médio' ? 'medium' : 'bad';
 
 const riskStyles: Record<RiskLevel, string> = {
-  good:   'bg-green-50 text-green-800 border-green-200',
-  medium: 'bg-yellow-50 text-yellow-800 border-yellow-200',
-  bad:    'bg-red-50 text-red-800 border-red-200',
+  good:   'bg-emerald-50 text-emerald-700 border-emerald-200',
+  medium: 'bg-amber-50 text-amber-700 border-amber-200',
+  bad:    'bg-rose-50 text-rose-700 border-rose-200',
 };
 
 const RiskIcon = ({ level }: { level: RiskLevel }) => {
-  if (level === 'good')   return <CheckCircleIcon fontSize="small" className="text-green-500 shrink-0" />;
-  if (level === 'medium') return <WarningAmberIcon fontSize="small" className="text-yellow-500 shrink-0" />;
-  return <CancelIcon fontSize="small" className="text-red-500 shrink-0" />;
+  if (level === 'good')   return <CheckCircleIcon fontSize="small" className="text-emerald-500 shrink-0" />;
+  if (level === 'medium') return <WarningRoundedIcon fontSize="small" className="text-amber-500 shrink-0" />;
+  return <CancelIcon fontSize="small" className="text-rose-500 shrink-0" />;
 };
 
-interface RiskIndicatorProps {
-  label: string;
-  value: string;
-  tooltip: string;
-  level: RiskLevel;
-}
-
-const RiskIndicator = ({ label, value, tooltip, level }: RiskIndicatorProps) => (
-  <div className={`p-3 rounded-xl border flex items-center justify-between ${riskStyles[level]}`}>
+const RiskIndicator = ({
+  label, value, tooltip, level,
+}: {
+  label: string; value: ToxValue; tooltip: string; level: RiskLevel;
+}) => (
+  <div className={`p-2.5 rounded-xl border flex items-center justify-between shadow-sm transition-transform hover:scale-[1.01] ${riskStyles[level]}`}>
     <div className="flex items-center gap-2">
-      <Typography className="font-nunito_sans font-extrabold text-[14px]">{label}</Typography>
+      <Typography className="font-inter font-bold text-[12px]">{label}</Typography>
       <Tooltip title={tooltip} placement="top">
-        <InfoOutlinedIcon sx={{ fontSize: 14 }} className="opacity-50 cursor-help" />
+        <InfoOutlinedIcon sx={{ fontSize: 14 }} className="opacity-50 cursor-help hover:opacity-100 transition-opacity" />
       </Tooltip>
     </div>
-    <div className="flex items-center gap-1.5">
-      <RiskIcon level={level} />
-      <Typography className="font-mono text-xs font-bold uppercase tracking-wide">{value}</Typography>
+    <div className="flex flex-col items-end gap-0.5">
+      <div className="flex items-center gap-1.5">
+        <RiskIcon level={level} />
+        <Typography className="font-mono text-[11px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded">
+          {value.category}
+        </Typography>
+      </div>
+      <span className="font-mono text-[10px] opacity-60">{value.raw.toFixed(2)}</span>
     </div>
   </div>
 );
 
-// ─── Radar ADMET dinâmico ────────────────────────────────────────────────────
-// Normaliza os 5 domínios para [0,1] e calcula os pontos do polígono.
-// Centro: (110, 100). Raio máximo: 80px.
+// ─── Radar ────────────────────────────────────────────────────────────────────
 
 const toRad = (deg: number) => (deg * Math.PI) / 180;
-
-// Eixos: Absorção (topo), Distribuição, Metabolismo, Excreção, Toxicidade
 const AXES = [
   { label: 'Absorção',    angle: -90  },
-  { label: 'Dist.',       angle: -18  },
-  { label: 'Metab.',      angle:  54  },
+  { label: 'Distribuição', angle: -18  },
+  { label: 'Metabolismo', angle:  54  },
   { label: 'Excreção',    angle: 126  },
   { label: 'Toxicidade',  angle: 198  },
 ];
-
-const CX = 110, CY = 105, R = 78;
-
+const CX = 140, CY = 110, R = 74;
 const axisPoint = (angle: number, r: number) => ({
   x: CX + r * Math.cos(toRad(angle)),
   y: CY + r * Math.sin(toRad(angle)),
 });
 
 const scoreMolecule = (mol: Molecule): number[] => {
-  // Absorção: baseado em absorptionPercent e caco2
-  const abs = (mol.absorptionPercent / 100) * 0.7
-    + (mol.caco2 === 'Excelente' ? 0.3 : mol.caco2 === 'Ruim' ? 0.15 : 0);
-
-  // Distribuição: ppb moderado é melhor (não 0%, não 100%)
+  const abs = Math.min(1,
+    (mol.absorptionPercent / 100) * 0.7 +
+    (mol.caco2.category === 'Excelente' ? 0.3 : 0)
+  );
   const ppbScore = 1 - Math.abs(mol.ppb - 50) / 50;
-  const dist = ppbScore * 0.5
-    + (mol.bbb === 'Excelente' ? 0.5 : mol.bbb === 'Médio' ? 0.3 : 0.1);
-
-  // Metabolismo: menos substratos = melhor
+  const dist = Math.min(1,
+    ppbScore * 0.5 +
+    (mol.bbb.category === 'Excelente' ? 0.5 : mol.bbb.category === 'Médio' ? 0.3 : 0.1)
+  );
   const cypCount = [mol.cyp1a2Substrate, mol.cyp2d6Substrate, mol.cyp3a4Substrate]
-    .filter(v => v === 'Sim').length;
-  const met = 1 - cypCount / 3;
-
-  // Excreção: tHalf razoável (2–24h ideal)
+    .filter(v => v.category === 'Sim').length;
+  const met = Math.max(0, 1 - cypCount / 3);
   const halfScore = mol.tHalf >= 2 && mol.tHalf <= 24 ? 1
     : mol.tHalf < 2 ? mol.tHalf / 2
     : Math.max(0, 1 - (mol.tHalf - 24) / 48);
-  const exc = halfScore * 0.6 + (mol.clPlasma < 30 ? 0.4 : mol.clPlasma < 80 ? 0.2 : 0);
-
-  // Toxicidade: ames + hepato + herg
-  const toxScore = (
-    (mol.ames   === 'Excelente' ? 1 : mol.ames   === 'Médio' ? 0.5 : 0) +
-    (mol.hepato === 'Excelente' ? 1 : mol.hepato === 'Médio' ? 0.5 : 0) +
-    (mol.herg   === 'Excelente' ? 1 : mol.herg   === 'Médio' ? 0.5 : 0)
-  ) / 3;
-
-  return [
-    Math.min(1, Math.max(0, abs)),
-    Math.min(1, Math.max(0, dist)),
-    Math.min(1, Math.max(0, met)),
-    Math.min(1, Math.max(0, exc)),
-    Math.min(1, Math.max(0, toxScore)),
-  ];
+  const exc = Math.min(1, halfScore * 0.6 + (mol.clPlasma < 30 ? 0.4 : mol.clPlasma < 80 ? 0.2 : 0));
+  const tox = Math.min(1, (
+    (mol.ames.category   === 'Excelente' ? 1 : mol.ames.category   === 'Médio' ? 0.5 : 0) +
+    (mol.hepato.category === 'Excelente' ? 1 : mol.hepato.category === 'Médio' ? 0.5 : 0) +
+    (mol.herg.category   === 'Excelente' ? 1 : mol.herg.category   === 'Médio' ? 0.5 : 0)
+  ) / 3);
+  return [abs, dist, met, exc, tox];
 };
 
-interface RadarProps { mol: Molecule }
-
-const AdmetRadar = ({ mol }: RadarProps) => {
-  const scores = scoreMolecule(mol);
-
-  // Pontos do polígono da molécula
+const AdmetRadar = ({ mol }: { mol: Molecule }) => {
+  const scores    = scoreMolecule(mol);
   const molPoints = AXES.map((ax, i) => axisPoint(ax.angle, scores[i] * R));
-  const molPath = molPoints.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ') + ' Z';
-
-  // Teia de fundo (3 níveis: 100%, 66%, 33%)
-  const webLevels = [1, 0.66, 0.33];
-
+  const molPath   = molPoints.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ') + ' Z';
   return (
-    <svg width="300" height="210" viewBox="0 0 220 210" className="mx-auto">
-      {/* Teias */}
-      {webLevels.map(level => {
+    <svg width="100%" height="220" viewBox="0 0 280 220" className="mx-auto drop-shadow-sm">
+      {[1, 0.66, 0.33].map(level => {
         const pts = AXES.map(ax => axisPoint(ax.angle, level * R));
-        const d = pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ') + ' Z';
-        return <path key={level} d={d} fill={level === 1 ? '#f8fafc' : 'none'} stroke="#e2e8f0" strokeWidth="0.75" />;
+        const d   = pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ') + ' Z';
+        return <path key={level} d={d} fill={level === 1 ? '#f8fafc' : 'none'} stroke="#e2e8f0" strokeWidth="1" />;
       })}
-
-      {/* Eixos */}
       {AXES.map(ax => {
         const tip = axisPoint(ax.angle, R);
-        return <line key={ax.label} x1={CX} y1={CY} x2={tip.x.toFixed(1)} y2={tip.y.toFixed(1)} stroke="#e2e8f0" strokeWidth="0.75" />;
+        return <line key={ax.label} x1={CX} y1={CY} x2={tip.x.toFixed(1)} y2={tip.y.toFixed(1)} stroke="#e2e8f0" strokeWidth="1" />;
       })}
-
-      {/* Polígono da molécula */}
-      <path d={molPath} fill="rgba(37,99,235,0.18)" stroke="#2563eb" strokeWidth="2" strokeLinejoin="round" />
-
-      {/* Pontos nos vértices */}
-      {molPoints.map((p, i) => (
-        <circle key={i} cx={p.x} cy={p.y} r="3" fill="#2563eb" />
-      ))}
-
-      {/* Labels dos eixos */}
-      {AXES.map((ax, i) => {
-        const tip = axisPoint(ax.angle, R + 16);
+      <path d={molPath} fill="rgba(37,99,235,0.15)" stroke="#2563eb" strokeWidth="2.5" strokeLinejoin="round" className="transition-all duration-700" />
+      {molPoints.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r="3.5" fill="#2563eb" stroke="#fff" strokeWidth="1" />)}
+      {AXES.map(ax => {
+        const tip = axisPoint(ax.angle, R + 24);
         return (
-          <text
-            key={ax.label}
-            x={tip.x.toFixed(1)}
-            y={tip.y.toFixed(1)}
-            fontSize="10"
-            fill="#64748b"
-            textAnchor="middle"
-            dominantBaseline="central"
-            fontWeight="600"
-            fontFamily="Inter, sans-serif"
-          >
+          <text key={ax.label} x={tip.x.toFixed(1)} y={tip.y.toFixed(1)} fontSize="10" fill="#64748b"
+            textAnchor="middle" dominantBaseline="central" fontWeight="700" fontFamily="Inter, sans-serif">
             {ax.label}
           </text>
         );
@@ -179,139 +130,110 @@ interface MoleculePreviewProps {
   onViewFullReport: (mol: Molecule) => void;
 }
 
-const MoleculePreview = ({ molecule: mol, onClose, onViewFullReport }: MoleculePreviewProps) => {
-  return (
-    <div className="w-full h-full bg-white flex flex-col">
+const MoleculePreview = ({ molecule: mol, onClose, onViewFullReport }: MoleculePreviewProps) => (
+  <div className="w-full h-full bg-white flex flex-col shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)] relative z-10">
 
-      {/* HEADER */}
-      <div className="p-4 border-b border-gray-100 flex justify-between items-start bg-slate-50/50 shrink-0">
-        <div className="flex-1 min-w-0">
-          <Typography variant="h6" className="font-nunito_sans font-extrabold text-gray-900 leading-tight truncate">
-            {mol.name}
+    {/* HEADER */}
+    <div className="p-5 border-b border-slate-100 flex justify-between items-start bg-slate-50/80 shrink-0">
+      <div className="flex-1 min-w-0">
+        <Typography variant="h6" className="font-nunito_sans font-extrabold text-slate-800 leading-tight truncate">
+          {mol.name}
+        </Typography>
+        <div className="flex items-center gap-2 mt-1.5">
+          <Typography className="font-mono text-[11px] text-slate-500 truncate max-w-[220px] bg-white px-2 py-0.5 rounded border border-slate-200 shadow-sm">
+            {mol.smiles}
           </Typography>
-          <div className="flex items-center gap-1.5 mt-1">
-            <Typography className="font-mono text-[11px] text-gray-400 truncate max-w-[240px]">
-              {mol.smiles}
-            </Typography>
-            <Tooltip title="Copiar SMILES">
-              <IconButton size="small" onClick={() => navigator.clipboard.writeText(mol.smiles)} className="p-0.5">
-                <ContentCopyIcon sx={{ fontSize: 13 }} className="text-gray-400 hover:text-blue-600" />
-              </IconButton>
-            </Tooltip>
-          </div>
+          <Tooltip title="Copiar SMILES">
+            <IconButton size="small" onClick={() => navigator.clipboard.writeText(mol.smiles)} className="p-1 hover:bg-blue-50 transition-colors">
+              <ContentCopyIcon sx={{ fontSize: 13 }} className="text-slate-400 hover:text-blue-600" />
+            </IconButton>
+          </Tooltip>
         </div>
-        <IconButton onClick={onClose} size="small" className="ml-3 bg-gray-100 hover:bg-red-50 hover:text-red-600 transition-colors shrink-0">
-          <CloseIcon fontSize="small" />
-        </IconButton>
       </div>
-
-      {/* BODY */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar">
-
-        {/* ESTRUTURA 2D */}
-        <div className="mx-4 mt-4 mb-2 h-44 bg-white border border-gray-100 rounded-xl flex items-center justify-center p-3 overflow-hidden">
-          <img
-            src={mol.imgUrl}
-            alt={mol.name}
-            className="max-w-full max-h-full object-contain mix-blend-multiply opacity-90"
-          />
-        </div>
-
-        {/* CARDS MW + LOGP */}
-        <div className="flex gap-3 px-4 py-3">
-          <div className="flex-1 bg-gray-50 rounded-xl border border-gray-100 p-3">
-            <p className="font-inter text-[10px] text-gray-400 uppercase tracking-wide mb-1">Peso Molecular</p>
-            <p className="font-mono text-base font-bold text-gray-900">
-              {mol.mw.toFixed(1)} <span className="text-xs font-normal text-gray-400">Da</span>
-            </p>
-          </div>
-          <div className="flex-1 bg-gray-50 rounded-xl border border-gray-100 p-3">
-            <p className="font-inter text-[10px] text-gray-400 uppercase tracking-wide mb-1">LogP</p>
-            <p className="font-mono text-base font-bold text-gray-900">{mol.logp.toFixed(2)}</p>
-          </div>
-          <div className="flex-1 bg-gray-50 rounded-xl border border-gray-100 p-3">
-            <p className="font-inter text-[10px] text-gray-400 uppercase tracking-wide mb-1">TPSA</p>
-            <p className="font-mono text-base font-bold text-gray-900">
-              {mol.tpsa.toFixed(1)} <span className="text-xs font-normal text-gray-400">Å²</span>
-            </p>
-          </div>
-        </div>
-
-        <Divider className="mx-4" />
-
-        {/* RADAR ADMET */}
-        <div className="mx-4 my-3 bg-gray-50/50 rounded-xl border border-gray-100 p-4">
-          <div className="flex justify-between items-center mb-2">
-            <p className="font-inter text-[11px] font-bold text-gray-400 uppercase tracking-wider">
-              Perfil ADMET
-            </p>
-            <Tooltip title="Quanto mais preenchido, melhor o perfil farmacocinético geral.">
-              <InfoOutlinedIcon sx={{ fontSize: 14 }} className="text-gray-300 cursor-help" />
-            </Tooltip>
-          </div>
-          <AdmetRadar mol={mol} />
-        </div>
-
-        <Divider className="mx-4" />
-
-        {/* SEMÁFORO DE RISCO */}
-        <div className="px-4 py-3 space-y-2 pb-6">
-          <p className="font-inter text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3">
-            Indicadores de Risco Crítico
-          </p>
-
-          <RiskIndicator
-            label="Mutagenicidade AMES"
-            value={mol.ames}
-            tooltip="Predição de mutagenicidade pelo Teste de Ames"
-            level={toxToRisk(mol.ames)}
-          />
-          <RiskIndicator
-            label="Cardiotoxicidade hERG"
-            value={mol.herg}
-            tooltip="Risco de bloqueio dos canais hERG — prolongamento do intervalo QT"
-            level={toxToRisk(mol.herg)}
-          />
-          <RiskIndicator
-            label="Hepatotoxicidade"
-            value={mol.hepato}
-            tooltip="Risco de dano hepático induzido pelo composto"
-            level={toxToRisk(mol.hepato)}
-          />
-
-          {/* Lipinski + Pfizer pills */}
-          <div className="flex gap-2 pt-1 justify-center">
-            <span className={`px-3 py-1 text-xs font-bold rounded-lg border font-inter ${
-              mol.lipinski === 'Pass' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'
-            }`}>
-              Lipinski: {mol.lipinski}
-            </span>
-            <span className={`px-3 py-1 text-xs font-bold rounded-lg border font-inter ${
-              mol.pfizer === 'Pass' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'
-            }`}>
-              Pfizer 3/75: {mol.pfizer}
-            </span>
-          </div>
-        </div>
-
-      </div>
-
-      {/* FOOTER */}
-      <div className="p-4 border-t border-gray-100 shrink-0">
-        <Button
-          variant="contained"
-          fullWidth
-          onClick={() => onViewFullReport(mol)}
-          startIcon={<LaunchIcon fontSize="small" />}
-          className="bg-blue-600 text-white font-nunito_sans font-extrabold normal-case hover:bg-blue-700 py-2.5 rounded-xl text-sm"
-          sx={{ boxShadow: 'none', '&:hover': { boxShadow: 'none' } }}
-        >
-          Ver Relatório Completo
-        </Button>
-      </div>
-
+      <IconButton onClick={onClose} size="small" className="ml-3 bg-white border border-slate-200 shadow-sm hover:bg-rose-50 hover:border-rose-200 hover:text-rose-600 transition-all shrink-0">
+        <CloseIcon fontSize="small" />
+      </IconButton>
     </div>
-  );
-};
+
+    {/* BODY */}
+    <div className="flex-1 overflow-y-auto custom-scrollbar pb-6">
+
+      {/* ESTRUTURA 2D */}
+      <div className="mx-5 mt-5 mb-4 h-48 bg-white border border-slate-200 rounded-2xl shadow-sm flex items-center justify-center p-4 overflow-hidden relative group">
+        <div className="absolute inset-0 bg-slate-50/50 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+        <img src={mol.imgUrl} alt={mol.name} className="max-w-full max-h-full object-contain mix-blend-multiply opacity-90 group-hover:scale-105 transition-transform duration-300" />
+      </div>
+
+      {/* CARDS FÍSICO-QUÍMICOS */}
+      <div className="flex gap-3 px-5 mb-5">
+        {[
+          { label: 'MW',   val: mol.mw.toFixed(1),   unit: 'Da' },
+          { label: 'LogP', val: mol.logp.toFixed(2),  unit: ''   },
+          { label: 'TPSA', val: mol.tpsa.toFixed(1),  unit: 'Å²' },
+        ].map(stat => (
+          <div key={stat.label} className="flex-1 bg-white rounded-xl border border-slate-200 shadow-sm p-3 flex flex-col items-center justify-center">
+            <p className="font-inter text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">{stat.label}</p>
+            <p className="font-mono text-sm font-black text-slate-700">
+              {stat.val}{stat.unit && <span className="text-[10px] font-bold text-slate-400 ml-0.5">{stat.unit}</span>}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      {/* DRUG-LIKENESS */}
+      <div className="mx-5 mb-5 flex flex-col gap-3 bg-white border border-slate-200 rounded-xl p-3.5 shadow-sm hover:shadow-md transition-all">
+        <div className="flex items-center gap-1.5 px-0.5">
+          <span className="font-inter text-[11px] font-extrabold text-slate-500 uppercase tracking-widest">Drug-likeness</span>
+          <Tooltip title="Regras empíricas de viabilidade oral (Lipinski Rule of 5 e Pfizer 3/75)">
+            <InfoOutlinedIcon sx={{ fontSize: 14 }} className="text-slate-300 cursor-help hover:text-blue-500 transition-colors" />
+          </Tooltip>
+        </div>
+        <div className="flex gap-2.5 w-full">
+          {[{ label: 'Lipinski', val: mol.lipinski }, { label: 'Pfizer', val: mol.pfizer }].map(r => (
+            <div key={r.label} className={`flex flex-1 items-center overflow-hidden rounded-lg border shadow-sm ${r.val === 'Pass' ? 'border-emerald-200' : 'border-rose-200'}`}>
+              <span className={`flex-1 text-center font-inter text-[9px] font-bold py-1.5 uppercase tracking-wider ${r.val === 'Pass' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>{r.label}</span>
+              <span className={`px-2.5 py-1.5 bg-white border-l font-mono text-[10px] font-bold ${r.val === 'Pass' ? 'text-emerald-700 border-emerald-100' : 'text-rose-700 border-rose-100'}`}>{r.val}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* RADAR ADMET */}
+      <div className="mx-5 mb-5 bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
+        <div className="flex justify-between items-center mb-1">
+          <p className="font-inter text-[11px] font-extrabold text-slate-500 uppercase tracking-widest">Perfil ADMET</p>
+          <Tooltip title="Impressão digital normalizada. Quanto maior a área, melhor o perfil geral.">
+            <InfoOutlinedIcon sx={{ fontSize: 15 }} className="text-slate-300 cursor-help" />
+          </Tooltip>
+        </div>
+        <AdmetRadar mol={mol} />
+      </div>
+
+      {/* ALERTAS DE TOXICIDADE */}
+      <div className="px-5 mb-2">
+        <div className="flex items-center gap-2 mb-3 border-b border-slate-100 pb-2.5">
+          <span className="w-2 h-2 rounded-full bg-rose-400 animate-pulse" />
+          <p className="font-inter text-[11px] font-extrabold text-slate-500 uppercase tracking-widest">Alertas de Toxicidade</p>
+        </div>
+        <div className="space-y-2.5">
+          <RiskIndicator label="Mutagenicidade (AMES)" value={mol.ames}   tooltip="Predição de mutagenicidade. Positivo indica potencial de causar dano ao DNA." level={toxRisk(mol.ames)} />
+          <RiskIndicator label="Cardiotóxico (hERG)"   value={mol.herg}   tooltip="Risco de bloqueio dos canais hERG, podendo causar arritmias fatais."           level={toxRisk(mol.herg)} />
+          <RiskIndicator label="Hepatotoxicidade"      value={mol.hepato} tooltip="Risco de dano hepático induzido pela droga (DILI)."                            level={toxRisk(mol.hepato)} />
+        </div>
+      </div>
+    </div>
+
+    {/* FOOTER */}
+    <div className="p-5 border-t border-slate-200 bg-slate-50/50 shrink-0">
+      <Button variant="contained" fullWidth onClick={() => onViewFullReport(mol)}
+        startIcon={<LaunchIcon fontSize="small" />}
+        className="bg-blue-600 text-white font-nunito_sans font-extrabold normal-case hover:bg-blue-700 hover:shadow-md transition-all py-3 rounded-xl text-sm"
+        sx={{ boxShadow: 'none' }}
+      >
+        Abrir Relatório Completo
+      </Button>
+    </div>
+  </div>
+);
 
 export default MoleculePreview;

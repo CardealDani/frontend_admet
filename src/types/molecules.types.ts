@@ -1,14 +1,32 @@
 // src/types/molecules.types.ts
-// Representa o output da API ADMETlab para uma única molécula.
-// Mantido separado de filters.ts: filtros descrevem critérios de busca,
-// Molecule descreve o dado retornado — responsabilidades distintas.
 
-// Tipos base para garantir o "Single Source of Truth"
-export type CategoricalBinary   = 'Excelente' | 'Ruim';
-export type CategoricalYesNo    = 'Sim' | 'Não'; // Usado primariamente pelas CYPs
-export type CategoricalTernary  = 'Excelente' | 'Médio' | 'Ruim';
-export type PassFail            = 'Pass' | 'Fail';
+// ─── Tipos categóricos ────────────────────────────────────────────────────────
+export type CategoryBinary  = 'Excelente' | 'Ruim';
+export type CategoryTernary = 'Excelente' | 'Médio' | 'Ruim';
+export type CategoryYesNo   = 'Sim' | 'Não';
+export type PassFail        = 'Pass' | 'Fail';
 
+// ─── Tipo central: valor numérico + categoria derivada ────────────────────────
+// Carrega o dado bruto da API E a label para UI — sem perder informação.
+//
+// Exemplos de uso:
+//   mol.caco2.raw      → -4.85   (para MoleculeDetail mostrar o número exato)
+//   mol.caco2.category → 'Excelente' (para filtros, badges, cores)
+//   mol.ames.raw       → 0.12    (probabilidade bruta)
+//   mol.ames.category  → 'Excelente'
+
+export interface MeasuredValue<C> {
+  raw: number;        // valor numérico exato da API
+  category: C;        // categoria derivada pelo adapter
+}
+
+// ─── Aliases para cada domínio ────────────────────────────────────────────────
+export type BinaryValue  = MeasuredValue<CategoryBinary>;
+export type TernaryValue = MeasuredValue<CategoryTernary>;
+export type ToxValue     = MeasuredValue<CategoryTernary>;
+export type YesNoValue   = MeasuredValue<CategoryYesNo>;
+
+// ─── Interface Molecule ───────────────────────────────────────────────────────
 export interface Molecule {
   // Identificação
   id: string;
@@ -16,37 +34,37 @@ export interface Molecule {
   smiles: string;
   imgUrl: string;
 
-  // Físico-Química
-  mw: number;       // g/mol  — Lipinski: ≤ 500
-  logp: number;     // —       — Lipinski: ≤ 5 | Pfizer: ≤ 3
-  tpsa: number;     // Å²      — Pfizer: ≥ 75
+  // Físico-Química (valores contínuos — sem categorização necessária)
+  mw: number;       // g/mol
+  logp: number;
+  tpsa: number;     // Å²
+  qed: number;      // 0–1
 
   // Absorção
-  absorptionPercent: number;       // % HIA
-  caco2: CategoricalBinary;        // 'Excelente' | 'Ruim'  (threshold -5.15)
-  pgpInhibitor: CategoricalTernary;// 'Excelente' | 'Médio' | 'Ruim'
+  absorptionPercent: number;   // % HIA — contínuo
+  caco2: BinaryValue;          // raw: cm/s log  | threshold: -5.15
+  pgpInhibitor: TernaryValue;  // raw: prob 0–1  | 0–0.3 Excelente, 0.3–0.7 Médio, >0.7 Ruim
 
   // Distribuição
-  bbb: CategoricalTernary;         // invertido: Baixa penetração = Excelente (alvo periférico)
-  ppb: number;                     // %
-  fu: number;                      // % fração livre
+  bbb: TernaryValue;           // raw: prob 0–1  | invertido: ≤0.3 Excelente (não penetra)
+  ppb: number;                 // % — contínuo
+  fu: number;                  // % fração livre — contínuo
 
-  // Metabolismo (Evitar Substrato -> Não é o Sucesso)
-  cyp1a2Substrate: CategoricalYesNo; // 'Sim' | 'Não'
-  cyp2d6Substrate: CategoricalYesNo; // 'Sim' | 'Não'
-  cyp3a4Substrate: CategoricalYesNo; // 'Sim' | 'Não'
+  // Metabolismo
+  cyp1a2Substrate: YesNoValue; // raw: prob 0–1  | >0.5 = Sim
+  cyp2d6Substrate: YesNoValue;
+  cyp3a4Substrate: YesNoValue;
 
-  // Excreção
+  // Excreção (contínuos)
   clPlasma: number;  // mL/min/kg
   tHalf: number;     // horas
 
-  // Toxicidade (0 a 0.3 = Excelente/Seguro, 0.7 a 1 = Ruim/Tóxico)
-  ames: CategoricalTernary;   // 'Excelente' | 'Médio' | 'Ruim'
-  hepato: CategoricalTernary; // 'Excelente' | 'Médio' | 'Ruim'
-  herg: CategoricalTernary;   // 'Excelente' | 'Médio' | 'Ruim'
+  // Toxicidade
+  ames: ToxValue;    // raw: prob 0–1  | ≤0.3 Seguro, ≤0.7 Atenção, >0.7 Tóxico
+  hepato: ToxValue;
+  herg: ToxValue;
 
   // MedChem
-  lipinski: PassFail; // 'Pass' | 'Fail'
-  pfizer: PassFail;   // 'Pass' | 'Fail'
-  qed: number;        // 0–1
+  lipinski: PassFail;
+  pfizer: PassFail;
 }

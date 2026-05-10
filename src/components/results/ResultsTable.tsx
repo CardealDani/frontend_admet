@@ -1,34 +1,43 @@
 // src/components/results/ResultsTable.tsx
 import { useState } from 'react';
 import { Tooltip } from '@mui/material';
-import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
+import ArrowUpwardIcon   from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
-import SwapVertIcon from '@mui/icons-material/SwapVert';
+import SwapVertIcon      from '@mui/icons-material/SwapVert';
 import FilterListOffIcon from '@mui/icons-material/FilterListOff';
 
 import type { Molecule } from '../../types/molecules.types';
 
-// ─── Helpers ────────────────────────────────────────────────────────────────
+// ─── Constantes ──────────────────────────────────────────────────────────────
+
+const PAGE_SIZE = 12;
 
 type SortField = 'mw' | 'logp' | 'tpsa' | 'qed';
-type SortDir = 'asc' | 'desc';
+type SortDir   = 'asc' | 'desc';
 
-const PAGE_SIZE = 15;
+// ─── Helpers de cor ──────────────────────────────────────────────────────────
 
-// Mapeia valores categóricos para cores de badge — seguindo o padrão semântico do sistema
-const badgeClass = (value: string): string => {
+const badgeCls = (value: string): string => {
   const v = value.toLowerCase();
   if (['seguro', 'excelente', 'pass', 'não', 'negativo'].includes(v))
-    return 'bg-green-50 text-green-700 border border-green-200';
+    return 'bg-emerald-50 text-emerald-700 border-emerald-200';
   if (['atenção', 'médio', 'moderado'].includes(v))
-    return 'bg-yellow-50 text-yellow-700 border border-yellow-200';
+    return 'bg-amber-50 text-amber-700 border-amber-200';
   if (['tóxico', 'ruim', 'fail', 'sim', 'positivo', 'alto'].includes(v))
-    return 'bg-red-50 text-red-700 border border-red-200';
-  return 'bg-gray-100 text-gray-600';
+    return 'bg-red-50 text-red-700 border-red-200';
+  return 'bg-gray-100 text-gray-500 border-transparent';
 };
 
-const StatusBadge = ({ value }: { value: string }) => (
-  <span className={`px-2 py-0.5 text-[10px] font-bold rounded font-inter inline-block min-w-[56px] text-center ${badgeClass(value)}`}>
+// ─── Badge ───────────────────────────────────────────────────────────────────
+
+const Badge = ({ value }: { value: string }) => (
+  <span className={`
+    inline-flex items-center justify-center
+    px-2 py-0.5 min-w-[58px]
+    text-[10px] font-bold rounded-md border
+    font-inter tracking-wide
+    ${badgeCls(value)}
+  `}>
     {value}
   </span>
 );
@@ -41,25 +50,31 @@ interface SortHeaderProps {
   current: SortField | null;
   dir: SortDir;
   onSort: (f: SortField) => void;
+  align?: 'left' | 'right';
 }
 
-const SortHeader = ({ label, field, current, dir, onSort }: SortHeaderProps) => {
+const SortHeader = ({ label, field, current, dir, onSort, align = 'left' }: SortHeaderProps) => {
   const active = current === field;
   return (
     <th
-      className="p-3 font-inter font-bold text-xs text-gray-600 uppercase tracking-wider cursor-pointer select-none hover:text-blue-600 transition-colors"
+      className={`
+        px-4 py-3 font-inter font-semibold text-[11px] uppercase tracking-wider
+        text-gray-400 cursor-pointer select-none whitespace-nowrap
+        hover:text-blue-500 transition-colors
+        ${align === 'right' ? 'text-right' : 'text-left'}
+      `}
       onClick={() => onSort(field)}
     >
-      <div className="flex items-center gap-1">
+      <span className="inline-flex items-center gap-1">
         {label}
         {active ? (
           dir === 'asc'
-            ? <ArrowUpwardIcon sx={{ fontSize: 13 }} className="text-blue-500" />
-            : <ArrowDownwardIcon sx={{ fontSize: 13 }} className="text-blue-500" />
+            ? <ArrowUpwardIcon sx={{ fontSize: 12 }} className="text-blue-500" />
+            : <ArrowDownwardIcon sx={{ fontSize: 12 }} className="text-blue-500" />
         ) : (
-          <SwapVertIcon sx={{ fontSize: 13 }} className="opacity-30" />
+          <SwapVertIcon sx={{ fontSize: 12 }} className="opacity-25" />
         )}
-      </div>
+      </span>
     </th>
   );
 };
@@ -68,17 +83,40 @@ const SortHeader = ({ label, field, current, dir, onSort }: SortHeaderProps) => 
 
 const EmptyState = () => (
   <tr>
-    <td colSpan={9} className="py-20 text-center">
-      <FilterListOffIcon sx={{ fontSize: 40 }} className="text-gray-200 mb-3" />
-      <p className="font-nunito_sans font-bold text-gray-400 text-sm">
-        Nenhuma molécula corresponde aos filtros aplicados
-      </p>
-      <p className="font-inter text-xs text-gray-300 mt-1">
-        Tente afrouxar os critérios ou clicar em "Resetar filtros"
-      </p>
+    <td colSpan={9} className="py-24 text-center">
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-12 h-12 rounded-2xl bg-gray-50 border border-gray-200 flex items-center justify-center">
+          <FilterListOffIcon sx={{ fontSize: 22 }} className="text-gray-300" />
+        </div>
+        <p className="font-nunito_sans font-bold text-gray-400 text-sm">
+          Nenhuma molécula corresponde aos filtros
+        </p>
+        <p className="font-inter text-xs text-gray-300">
+          Tente afrouxar os critérios ou clique em "Resetar filtros"
+        </p>
+      </div>
     </td>
   </tr>
 );
+
+// ─── QED mini-bar inline ──────────────────────────────────────────────────────
+
+const QedBar = ({ qed }: { qed: number }) => {
+  const color = qed >= 0.7 ? '#10b981' : qed >= 0.4 ? '#f59e0b' : '#ef4444';
+  return (
+    <div className="flex items-center gap-2">
+      <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+        <div
+          className="h-full rounded-full"
+          style={{ width: `${qed * 100}%`, background: color }}
+        />
+      </div>
+      <span className="font-mono text-[11px] text-gray-500 tabular-nums">
+        {qed.toFixed(2)}
+      </span>
+    </div>
+  );
+};
 
 // ─── Componente principal ────────────────────────────────────────────────────
 
@@ -90,13 +128,13 @@ interface ResultsTableProps {
 
 const ResultsTable = ({ molecules, onRowClick, selectedMolId }: ResultsTableProps) => {
   const [sortField, setSortField] = useState<SortField | null>(null);
-  const [sortDir, setSortDir]     = useState<SortDir>('asc');
-  const [page, setPage]           = useState(0);
+  const [sortDir,   setSortDir]   = useState<SortDir>('asc');
+  const [page,      setPage]      = useState(0);
 
   // ── Sort ────────────────────────────────────────────────────────────────
   const handleSort = (field: SortField) => {
     if (sortField === field) {
-      setSortDir(d => (d === 'asc' ? 'desc' : 'asc'));
+      setSortDir(d => d === 'asc' ? 'desc' : 'asc');
     } else {
       setSortField(field);
       setSortDir('asc');
@@ -113,175 +151,213 @@ const ResultsTable = ({ molecules, onRowClick, selectedMolId }: ResultsTableProp
     : molecules;
 
   // ── Paginação ────────────────────────────────────────────────────────────
-  const totalPages = Math.ceil(sorted.length / PAGE_SIZE);
-  const pageData   = sorted.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
-
-  // Reset página quando lista muda (filtros aplicados)
-  // Evitamos useEffect aqui — pageData já corrige naturalmente
-  const safePage   = Math.min(page, Math.max(0, totalPages - 1));
+  const totalPages  = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+  const safePage    = Math.min(page, totalPages - 1);
   const displayData = sorted.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE);
 
   return (
     <div className="w-full h-full flex flex-col bg-white">
 
-      {/* TABELA */}
-      <div className="flex-1 overflow-auto custom-scrollbar">
-        <table className="w-full text-left border-collapse">
+      {/* ── TABELA ──────────────────────────────────────────────────────── */}
+      <div className="flex-1 overflow-auto">
+        <table className="w-full border-collapse">
 
-          <thead className="bg-white border-b border-gray-200 sticky top-0 z-10">
-            <tr>
-              <th className="p-3 font-inter font-bold text-xs text-gray-600 uppercase tracking-wider text-center w-10">#</th>
-              <th className="p-3 font-inter font-bold text-xs text-gray-600 uppercase tracking-wider text-center w-20">2D</th>
-              <th className="p-3 font-inter font-bold text-xs text-gray-600 uppercase tracking-wider">Molécula</th>
+          {/* CABEÇALHO */}
+          <thead>
+            <tr className="bg-gray-50/80 border-b border-gray-200 sticky top-0 z-10">
+              {/* # */}
+              <th className="px-4 py-3 w-10 text-center font-inter font-semibold text-[11px] uppercase tracking-wider text-gray-400">
+                #
+              </th>
+              {/* Imagem — coluna mais larga agora */}
+              <th className="px-3 py-3 w-28 text-center font-inter font-semibold text-[11px] uppercase tracking-wider text-gray-400">
+                Estrutura
+              </th>
+              {/* Nome */}
+              <th className="px-4 py-3 font-inter font-semibold text-[11px] uppercase tracking-wider text-gray-400 text-left">
+                Molécula
+              </th>
+              {/* Sortáveis */}
               <SortHeader label="MW"   field="mw"   current={sortField} dir={sortDir} onSort={handleSort} />
               <SortHeader label="LogP" field="logp" current={sortField} dir={sortDir} onSort={handleSort} />
               <SortHeader label="QED"  field="qed"  current={sortField} dir={sortDir} onSort={handleSort} />
-              <th className="p-3 font-inter font-bold text-xs text-gray-600 uppercase tracking-wider text-center">AMES</th>
+              {/* Badges */}
+               <th className="p-3 font-inter font-bold text-xs text-gray-600 uppercase tracking-wider text-center">AMES</th>
               <th className="p-3 font-inter font-bold text-xs text-gray-600 uppercase tracking-wider text-center">Hepato</th>
               <th className="p-3 font-inter font-bold text-xs text-gray-600 uppercase tracking-wider text-center">Lipinski</th>
             </tr>
           </thead>
 
-          <tbody className="divide-y divide-gray-50">
-            {displayData.length === 0 ? (
-              <EmptyState />
-            ) : (
-              displayData.map((mol, idx) => {
-                const isSelected = mol.id === selectedMolId;
-                const globalIdx  = safePage * PAGE_SIZE + idx + 1;
+          {/* CORPO */}
+          <tbody>
+            {displayData.length === 0 ? <EmptyState /> : displayData.map((mol, idx) => {
+              const isSelected = mol.id === selectedMolId;
+              const globalIdx  = safePage * PAGE_SIZE + idx + 1;
 
-                
-                return (
-                  <tr
-                    key={mol.id}
-                    onClick={() => onRowClick(mol)}
-                    className={`cursor-pointer transition-colors group ${
-                      isSelected
-                        ? 'bg-blue-50'
-                        : 'hover:bg-gray-50/80 border-l-transparent'
-                    }`}
-                  >
-                    {/* # */}
-                    <td className={`p-3 text-center border-l-[3px] transition-colors ${isSelected ? 'border-blue-500' : 'border-transparent'}`}>
-                      <span className="font-inter font-medium text-gray-400 text-xs">{globalIdx}</span>
-                    </td>
+              // Indicadores numéricos
+              const mwAlert  = mol.mw > 500;
+              const logpAlert = mol.logp > 5 || mol.logp < -2;
 
-                    {/* 2D */}
-                    <td className="p-2">
-                      <div className="w-14 h-10 flex items-center justify-center mx-auto">
-                        <img
-                          src={mol.imgUrl}
-                          alt={mol.name}
-                          className="max-w-full max-h-full object-contain opacity-80 group-hover:scale-110 transition-transform mix-blend-multiply"
-                        />
-                      </div>
-                    </td>
+              return (
+                <tr
+                  key={mol.id}
+                  onClick={() => onRowClick(mol)}
+                  className={`
+                    group cursor-pointer transition-all duration-100
+                    border-b border-gray-50 last:border-0
+                    ${isSelected
+                      ? 'bg-blue-50/60 border-l-2 border-l-blue-500'
+                      : 'border-l-2 border-l-transparent hover:bg-gray-50/70'}
+                  `}
+                >
+                  {/* # */}
+                  <td className="px-4 py-3 text-center">
+                    <span className="font-inter text-xs text-gray-300 tabular-nums font-medium">
+                      {globalIdx}
+                    </span>
+                  </td>
 
-                    {/* Nome + SMILES */}
-                    <td className="p-3">
-                      <p className={`font-nunito_sans font-bold text-sm leading-tight ${
-                        isSelected ? 'text-blue-700' : 'text-gray-800'
-                      }`}>
-                        {mol.name}
+                  {/* IMAGEM — maior e mais central */}
+                  <td className="px-3 py-2">
+                    <div className="
+                      w-20 h-16 mx-auto
+                      rounded-xl border border-gray-100
+                      bg-white flex items-center justify-center
+                      overflow-hidden
+                      group-hover:border-blue-100 transition-colors
+                    ">
+                      <img
+                        src={mol.imgUrl}
+                        alt={mol.name}
+                        className="
+                          w-[68px] h-[56px] object-contain
+                          mix-blend-multiply opacity-85
+                          group-hover:scale-110 transition-transform duration-300
+                        "
+                      />
+                    </div>
+                  </td>
+
+                  {/* NOME + SMILES */}
+                  <td className="px-4 py-3 max-w-[200px]">
+                    <p className={`
+                      font-nunito_sans font-bold text-sm leading-tight truncate
+                      ${isSelected ? 'text-blue-700' : 'text-gray-800 group-hover:text-blue-600'}
+                      transition-colors
+                    `}>
+                      {mol.name}
+                    </p>
+                    <Tooltip title={mol.smiles} placement="bottom-start">
+                      <p className="font-mono text-[10px] text-gray-400 truncate mt-0.5 max-w-[190px]">
+                        {mol.smiles}
                       </p>
-                      <Tooltip title={mol.smiles} placement="bottom-start">
-                        <p className="font-mono text-[10px] text-gray-400 truncate max-w-[160px] mt-0.5">
-                          {mol.smiles}
-                        </p>
-                      </Tooltip>
-                    </td>
+                    </Tooltip>
+                    {/* ID pill */}
+                    <span className="
+                      inline-block mt-1
+                      font-mono text-[9px] font-semibold
+                      px-1.5 py-0.5 rounded bg-gray-100 text-gray-400
+                    ">
+                      {mol.id}
+                    </span>
+                  </td>
 
-                    {/* MW */}
-                    <td className="p-3">
-                      <span className={`font-mono text-xs ${mol.mw > 500 ? 'text-red-500 font-bold' : 'text-gray-700'}`}>
-                        {mol.mw.toFixed(1)}
-                      </span>
-                    </td>
+                  {/* MW */}
+                  <td className="px-4 py-3">
+                    <span className={`font-mono text-xs tabular-nums ${mwAlert ? 'text-red-500 font-bold' : 'text-gray-700'}`}>
+                      {mol.mw.toFixed(1)}
+                    </span>
+                    {mwAlert && (
+                      <span className="block text-[9px] text-red-400 font-inter">{'>'} 500</span>
+                    )}
+                  </td>
 
-                    {/* LogP */}
-                    <td className="p-3">
-                      <span className={`font-mono text-xs ${mol.logp > 5 ? 'text-red-500 font-bold' : mol.logp < 0 ? 'text-blue-500' : 'text-gray-700'}`}>
-                        {mol.logp.toFixed(2)}
-                      </span>
-                    </td>
+                  {/* LogP */}
+                  <td className="px-4 py-3 ">
+                    <span className={`font-mono text-xs tabular-nums ${logpAlert ? 'text-amber-600 font-bold' : 'text-gray-700'}`}>
+                      {mol.logp.toFixed(2)}
+                    </span>
+                  </td>
 
-                    {/* QED */}
-                    <td className="p-3">
-                      <div className="flex items-center gap-1.5">
-                        <div className="w-14 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                          <div
-                            className={`h-full rounded-full transition-all ${
-                              mol.qed >= 0.7 ? 'bg-green-400' : mol.qed >= 0.4 ? 'bg-amber-400' : 'bg-red-400'
-                            }`}
-                            style={{ width: `${mol.qed * 100}%` }}
-                          />
-                        </div>
-                        <span className="font-mono text-[10px] text-gray-500">
-                          {mol.qed.toFixed(2)}
-                        </span>
-                      </div>
-                    </td>
+                  {/* QED bar */}
+                  <td className="px-4 py-3">
+                    <QedBar qed={mol.qed} />
+                  </td>
 
-                    {/* AMES */}
-                    <td className="p-3 text-center">
-                      <StatusBadge value={mol.ames} />
-                    </td>
+                  {/* AMES */}
+                  <td className="px-4 py-3 text-center">
+                    <Badge value={mol.ames.category} />
+                  </td>
 
-                    {/* Hepato */}
-                    <td className="p-3 text-center">
-                      <StatusBadge value={mol.hepato} />
-                    </td>
+                  {/* Hepato */}
+                  <td className="px-4 py-3 text-center">
+                    <Badge value={mol.hepato.category} />
+                  </td>
 
-                    {/* Lipinski */}
-                    <td className="p-3 text-center">
-                      <StatusBadge value={mol.lipinski} />
-                    </td>
-                  </tr>
-                );
-              })
-            )}
+                  {/* Lipinski */}
+                  <td className="px-4 py-3 text-center">
+                    <Badge value={mol.lipinski} />
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
 
-      {/* PAGINAÇÃO */}
-      <div className="shrink-0 flex items-center justify-between px-4 py-2.5 border-t border-gray-100 bg-white">
+      {/* ── PAGINAÇÃO ────────────────────────────────────────────────────── */}
+      <div className="shrink-0 flex items-center justify-between px-5 py-3 border-t border-gray-100 bg-white">
         <span className="font-inter text-xs text-gray-400">
-          Página {totalPages === 0 ? 0 : safePage + 1} de {totalPages}
+          {sorted.length === 0
+            ? 'Nenhum resultado'
+            : `${safePage * PAGE_SIZE + 1}–${Math.min((safePage + 1) * PAGE_SIZE, sorted.length)} de ${sorted.length}`}
         </span>
 
         <div className="flex items-center gap-1">
+          {/* Anterior */}
           <button
             onClick={() => setPage(p => Math.max(0, p - 1))}
             disabled={safePage === 0}
-            className="px-3 py-1 text-xs font-inter font-medium rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="
+              px-3 py-1.5 text-xs font-inter font-medium
+              rounded-lg border border-gray-200 text-gray-500
+              hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed
+              transition-colors
+            "
           >
-            Ant
+            ← Anterior
           </button>
 
-          {/* Números de página — mostra até 5 */}
+          {/* Números de página */}
           {Array.from({ length: totalPages }, (_, i) => i)
             .filter(i => Math.abs(i - safePage) <= 2)
             .map(i => (
               <button
                 key={i}
                 onClick={() => setPage(i)}
-                className={`w-7 h-7 text-xs font-inter font-medium rounded-lg transition-colors ${
-                  i === safePage
-                    ? 'bg-blue-600 text-white border border-blue-600'
-                    : 'border border-gray-200 text-gray-500 hover:bg-gray-50'
-                }`}
+                className={`
+                  w-8 h-8 text-xs font-inter font-semibold rounded-lg transition-colors
+                  ${i === safePage
+                    ? 'bg-blue-600 text-white border border-blue-600 shadow-sm'
+                    : 'border border-gray-200 text-gray-500 hover:bg-gray-50'}
+                `}
               >
                 {i + 1}
               </button>
             ))}
 
+          {/* Próximo */}
           <button
             onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
             disabled={safePage >= totalPages - 1}
-            className="px-3 py-1 text-xs font-inter font-medium rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            className="
+              px-3 py-1.5 text-xs font-inter font-medium
+              rounded-lg border border-gray-200 text-gray-500
+              hover:bg-gray-50 disabled:opacity-30 disabled:cursor-not-allowed
+              transition-colors
+            "
           >
-            Próx
+            Próximo →
           </button>
         </div>
       </div>
