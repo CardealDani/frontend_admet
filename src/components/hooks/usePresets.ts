@@ -1,6 +1,6 @@
 // src/hooks/usePresets.ts
 // Gerencia presets embutidos + presets salvos pelo usuário (localStorage).
-// Retorna uma lista unificada e ações de save/delete.
+// Retorna uma lista unificada e ações de save/delete/update.
 
 import { useState, useCallback, useMemo } from 'react';
 import { BUILT_IN_PRESETS, type PresetDefinition } from '../../mocks/presets.mock';
@@ -34,12 +34,13 @@ export interface UsePresetsReturn {
   setActivePresetId: (id: string) => void;
   saveCurrentAsPreset: (label: string, filters: AdmetFilters) => PresetDefinition;
   deleteUserPreset: (id: string) => void;
+  updatePreset: (id: string, newFilters: AdmetFilters) => void; // <--- ADICIONADO AQUI
 }
 
 // ─── Hook ──────────────────────────────────────────────────────────────────
 
 export const usePresets = (): UsePresetsReturn => {
-  const [userPresets, setUserPresets]     = useState<PresetDefinition[]>(loadFromStorage);
+  const [userPresets, setUserPresets] = useState<PresetDefinition[]>(loadFromStorage);
   const [activePresetId, setActivePresetId] = useState<string>('default');
 
   const allPresets = useMemo(
@@ -77,6 +78,18 @@ export const usePresets = (): UsePresetsReturn => {
     setActivePresetId(prev => (prev === id ? 'default' : prev));
   }, []);
 
+  // <--- NOVA FUNÇÃO DE ATUALIZAÇÃO CORRIGIDA --->
+  const updatePreset = useCallback((id: string, newFilters: AdmetFilters) => {
+    setUserPresets(prev => {
+      // Mapeia os presets do utilizador e atualiza apenas o que tem o ID correspondente
+      const updated = prev.map(p => 
+        p.id === id ? { ...p, filters: newFilters } : p
+      );
+      saveToStorage(updated); // Persiste a alteração no localStorage
+      return updated;
+    });
+  }, []);
+
   return {
     allPresets,
     userPresets,
@@ -84,5 +97,6 @@ export const usePresets = (): UsePresetsReturn => {
     setActivePresetId,
     saveCurrentAsPreset,
     deleteUserPreset,
+    updatePreset, // <--- EXPORTADO AQUI
   };
 };

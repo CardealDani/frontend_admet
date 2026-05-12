@@ -16,6 +16,7 @@ import { DistributionSection } from './filters/sections/DistributionSection';
 import { MetabolismSection } from './filters/sections/MetabolismSection';
 import { ExcretionSection } from './filters/sections/ExcretionSection';
 import { ToxicitySection } from './filters/sections/ToxicitySection';
+import { useEffect } from 'react';
 
 interface FilterSidebarProps {
   isSidebarOpen: boolean;
@@ -47,11 +48,15 @@ const FilterSidebar = ({ isSidebarOpen, toggleSidebar, filterEngine }: FilterSid
     setActivePresetId,
     saveCurrentAsPreset,
     deleteUserPreset,
+    updatePreset
   } = usePresets();
 
   // Os Handlers agora só acionam o motor do pai. O ResultsLayout se atualiza sozinho!
   const handleApply = () => applyFilters();
-  const handleReset = () => resetFilters();
+  const handleReset = () =>{
+        setActivePresetId('default')
+    resetFilters();
+  } 
 
   const handleSelectPreset = (preset: (typeof allPresets)[number]) => {
     loadPreset(preset.filters);
@@ -138,6 +143,7 @@ const FilterSidebar = ({ isSidebarOpen, toggleSidebar, filterEngine }: FilterSid
             onSelectPreset={handleSelectPreset}
             onSavePreset={handleSavePreset}
             onDeletePreset={deleteUserPreset}
+            onUpdatePreset={updatePreset}
           />
 
           <PfqMedChemSection
