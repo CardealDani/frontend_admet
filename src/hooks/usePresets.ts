@@ -3,8 +3,8 @@
 // Retorna uma lista unificada e ações de save/delete/update.
 
 import { useState, useCallback, useMemo } from 'react';
-import { BUILT_IN_PRESETS, type PresetDefinition } from '../../mocks/presets.mock';
-import type { AdmetFilters } from '../../types/filters';
+import { BUILT_IN_PRESETS, type PresetDefinition } from '../mocks/presets.mock';
+import type { AdmetFilters } from '../types/filters';
 
 const STORAGE_KEY = 'admet_user_presets';
 
@@ -82,7 +82,7 @@ export const usePresets = (): UsePresetsReturn => {
   const updatePreset = useCallback((id: string, newFilters: AdmetFilters) => {
     setUserPresets(prev => {
       // Mapeia os presets do utilizador e atualiza apenas o que tem o ID correspondente
-      const updated = prev.map(p => 
+      const updated = prev.map(p =>
         p.id === id ? { ...p, filters: newFilters } : p
       );
       saveToStorage(updated); // Persiste a alteração no localStorage

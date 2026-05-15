@@ -1,15 +1,16 @@
 // src/components/results/SingleMoleculeLayout.tsx
-import { Button } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
+import { Button, Tooltip } from '@mui/material';
+import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import DownloadIcon from '@mui/icons-material/Download';
-
 import MoleculeDetail from './MoleculeDetail';
-import { MOCK_MOLECULES } from '../../mocks/molecules.mock';
 import type { Molecule } from '../../types/molecules.types';
+import { MOCK_MOLECULES } from '../../mocks/molecules.mock';
 
 interface SingleMoleculeLayoutProps {
   smiles?: string;
   onBack: () => void;
+  // Agora recebemos a molécula real vinda do serviço
+  molecule?: Molecule; 
 }
 
 const exportCsv = (mol: Molecule) => {
@@ -45,7 +46,7 @@ const exportCsv = (mol: Molecule) => {
     mol.lipinski, mol.pfizer,
   ];
   const csv  = [headers.join(','), row.join(',')].join('\n');
-  const blob = new Blob([csv], { type: 'text/csv' });
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
   a.href = url;
@@ -54,40 +55,54 @@ const exportCsv = (mol: Molecule) => {
   URL.revokeObjectURL(url);
 };
 
-const SingleMoleculeLayout = ({ smiles, onBack }: SingleMoleculeLayoutProps) => {
-  const molecule = MOCK_MOLECULES[0];
+const SingleMoleculeLayout = ({ smiles, onBack, molecule: propMolecule }: SingleMoleculeLayoutProps) => {
+  // Fallback para o mock se não vier molécula por props
+  const molecule = propMolecule || MOCK_MOLECULES[0];
 
   return (
-    <div className="w-full h-[calc(100vh-65px)] flex flex-col bg-slate-50 overflow-hidden">
+    <div className="w-full h-[calc(100vh-65px)] flex flex-col bg-slate-50 animate-fade-in overflow-hidden">
 
-      <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-3">
-          <span className="font-inter text-xs text-gray-400 font-medium">Análise de Molécula Única</span>
-          <span className="w-1 h-1 rounded-full bg-gray-300" />
-          <span className="font-mono text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md max-w-xs truncate">
+      {/* HEADER UNIFICADO (Igual ao MoleculeDetailPage) */}
+      <header className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between shrink-0 sticky top-0 z-30 shadow-sm">
+        
+        {/* LADO ESQUERDO: Ação de Voltar */}
+        <button
+          onClick={onBack}
+          className="flex items-center gap-1.5 text-sm text-gray-500 font-medium font-inter hover:text-blue-600 transition-colors px-2 py-1.5 rounded-lg hover:bg-blue-50"
+        >
+          <ArrowBackIosIcon sx={{ fontSize: 13 }} />
+          Voltar ao Início
+        </button>
+
+        {/* CENTRO: Identificação da análise atual */}
+        <div className="hidden md:flex items-center gap-2 absolute left-1/2 -translate-x-1/2">
+           <span className="font-inter text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Análise Única</span>
+           <span className="font-mono text-xs text-slate-500 font-bold bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200 max-w-[150px] truncate">
             {smiles || molecule.smiles}
           </span>
         </div>
+
+        {/* LADO DIREITO: Ações de Exportação */}
         <div className="flex items-center gap-2">
-          <Button variant="text" size="small" startIcon={<AddIcon sx={{ fontSize: 16 }} />} onClick={onBack}
-            className="normal-case font-inter font-semibold text-sm text-blue-600 hover:bg-blue-50 px-3 rounded-lg">
-            Nova Predição
-          </Button>
-          <div className="w-px h-5 bg-gray-200" />
-          <Button variant="outlined" size="small" startIcon={<DownloadIcon sx={{ fontSize: 15 }} />}
+          <Button 
+            variant="outlined" 
+            size="small" 
+            startIcon={<DownloadIcon sx={{ fontSize: 15 }} />}
             onClick={() => exportCsv(molecule)}
             className="normal-case font-inter font-semibold text-sm border-gray-200 text-gray-600 hover:bg-gray-50 rounded-lg px-3"
-            sx={{ boxShadow: 'none' }}>
+            sx={{ boxShadow: 'none' }}
+          >
             Exportar CSV
           </Button>
         </div>
-      </div>
+      </header>
 
-      <div className="flex-1 overflow-y-auto">
+      {/* CONTEÚDO SCROLLÁVEL */}
+      <main className="flex-1 overflow-y-auto custom-scrollbar">
         <div className="max-w-5xl mx-auto px-6 py-6">
           <MoleculeDetail molecule={molecule} />
         </div>
-      </div>
+      </main>
     </div>
   );
 };

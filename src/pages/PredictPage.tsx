@@ -1,11 +1,6 @@
 // src/pages/PredictPage.tsx
-import React, { useState, useEffect, useRef } from 'react';
-import AppHeader from '../components/Header/AppHeader';
-import Footer from '../components/Footer/Footer';
-import {
-  Button, Typography, CircularProgress,
-  Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions
-} from '@mui/material';
+import { useState } from 'react';
+import { Button, Typography, Tooltip } from '@mui/material';
 
 // Ícones
 import ScienceIcon from '@mui/icons-material/Science';
@@ -13,346 +8,257 @@ import UploadFileIcon from '@mui/icons-material/UploadFile';
 import KeyboardIcon from '@mui/icons-material/Keyboard';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import DownloadIcon from '@mui/icons-material/Download';
 
-// IMPORTAÇÃO DOS LAYOUTS DE RESULTADOS
+// Componentes Globais e Layouts
+import { Header } from '../components/Header';
+import AppHeader from '../components/Header/AppHeader';
+import Footer from '../components/Footer/Footer';
 import ResultsLayout from '../components/results/ResultsLayout';
 import SingleMoleculeLayout from '../components/results/SingleMoleculeLayout';
-import { Header } from '../components/Header';
 
-type Phase = 'input' | 'loading' | 'results';
+// Componentes e Hooks isolados da predição
+import { usePredictManager } from '../hooks/usePredictManager';
+import { WarningModal } from '../components/predict/WarningModal';
+import { LoadingView } from '../components/predict/LoadingView';
 
 const PredictPage = () => {
-  // CORREÇÃO: O estado inicial deve ser 'input'
-  const [phase, setPhase] = useState<Phase>('input');
+  // Toda a lógica de estado e funções está agora blindada neste hook
+  const manager = usePredictManager();
 
-  const [activeTab, setActiveTab] = useState<'smiles' | 'file'>('file');
-  const [smilesInput, setSmilesInput] = useState('');
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-
-  // =========================================================================
-  // ESTADOS DO MODAL DE AVISO (PREVENÇÃO DE ERROS)
-  // =========================================================================
-  const [showWarningModal, setShowWarningModal] = useState(false);
-  const [pendingAction, setPendingAction] = useState<'browser_back' | 'button_reset' | null>(null);
-
-  // Ref para evitar conflito entre o nosso botão de voltar e o botão do navegador
-  const isProgrammaticBack = useRef(false);
-
-  // =========================================================================
-  // HISTORY TRAPPING: Interceptando o botão Voltar do Navegador
-
-  useEffect(() => {
-    const handlePopState = (e: PopStateEvent) => {
-      // Se fomos nós que mandamos voltar via código (ex: confirmou o reset), ignora.
-      if (isProgrammaticBack.current) {
-        isProgrammaticBack.current = false;
-        return;
-      }
-      
-      if (phase === 'results') {
-        const newPage = e.state?.page;
-
-        // MÁGICA: Se o usuário navegou entre a tabela ('results') e o detalhe ('detail'),
-        // seja avançando ou voltando, NÃO mostramos o aviso. Deixamos o ResultsLayout lidar.
-        if (newPage === 'results' || newPage === 'detail') {
-          return;
-        }
-        
-        // Se NÃO for nenhum dos dois, o usuário estava na Tabela e apertou "Voltar" 
-        // tentando sair da análise completamente!
-        // Empurramos o estado de volta para prender ele na tabela, e mostramos o Modal.
-        window.history.pushState({ page: 'results' }, '', window.location.pathname);
-        setPendingAction('browser_back');
-        setShowWarningModal(true);
-      }
-    };
-
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, [phase]);
-  // =========================================================================
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      setUploadedFile(e.target.files[0]);
-    }
-  };
-
-  const isButtonDisabled =
-    (activeTab === 'smiles' && smilesInput.trim() !== '') ||
-    (activeTab === 'file' && uploadedFile !== null);
-
-  const handlePredict = () => {
-    setPhase('loading');
-    setTimeout(() => {
-      // Injeta um registro falso no histórico para habilitar o botão "Voltar" do navegador
-      window.history.pushState({ page: 'results' }, '', window.location.pathname);
-      setPhase('results');
-    }, 100);
-  };
-
-  // Quando o usuário clica no botão "Nova Predição" da UI
-  const handleResetRequest = () => {
-    setPendingAction('button_reset');
-    setShowWarningModal(true);
-  };
-
-  // Ação: Usuário confirmou que quer perder os dados e voltar
-  const handleConfirmReset = () => {
-    setShowWarningModal(false);
-    setPhase('input');
-    setSmilesInput('');
-    setUploadedFile(null);
-
-    // Como confirmamos a saída, precisamos remover aquele registro falso 
-    // que empurramos no histórico para não quebrar a navegação futura.
-    isProgrammaticBack.current = true;
-    window.history.back();
-    
-    setPendingAction(null);
-  };
-
-  // Ação: Usuário desistiu de voltar
-  const handleCancelReset = () => {
-    setShowWarningModal(false);
-    // Como nós já prendemos o usuário recriando o state lá no `handlePopState`,
-    // não precisamos fazer mais nada aqui. Ele continua seguro na tela de resultados.
-    setPendingAction(null);
-  };
+  const [isDragging, setIsDragging] = useState(false);
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 overflow-hidden">
-      {phase === 'results' ? (
-        <AppHeader onNewAnalysis={handleResetRequest} />
-      ) : (
-        <Header />
-      )}
+      {manager.phase === 'results' ? <AppHeader onNewAnalysis={() => manager.setShowWarningModal(true)} /> : <Header />}
 
-      <main className={`flex-grow flex flex-col w-full ${phase === 'results' ? 'pt-16' : 'pt-24 max-w-7xl mx-auto px-6 items-center justify-center'}`}>
+      <main className={`flex-grow flex flex-col w-full ${manager.phase === 'results' ? 'pt-16' : 'pt-24 max-w-7xl mx-auto px-6 items-center justify-center'}`}>
 
         {/* FASE 1: INPUT */}
-        {phase === 'input' && (
+        {manager.phase === 'input' && (
           <div className="w-full flex flex-col items-center justify-center animate-fade-in-up h-full p-10">
             <div className="text-center mb-10 max-w-2xl">
-              <Typography variant="h4" className="font-nunito_sans font-bold text-gray-900 mb-3">
-                Nova <span className="text-blue-600">Análise ADMET</span>
-              </Typography>
-              <Typography className="font-inter text-gray-500">
-                Insira a representação da molécula para iniciar a predição das propriedades farmacocinéticas e de toxicidade.
-              </Typography>
+              <Typography variant="h4" className="font-nunito_sans font-bold text-gray-900 mb-3">Nova <span className="text-blue-600">Análise ADMET</span></Typography>
+              <Typography className="font-inter text-gray-500">Insira a representação da molécula para iniciar a predição.</Typography>
             </div>
 
+            {manager.errorMessage && (
+              <div className="w-full max-w-3xl mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl flex items-center gap-3 animate-fade-in-up">
+                <WarningAmberIcon /> <span className="font-inter text-sm font-medium">{manager.errorMessage}</span>
+              </div>
+            )}
+
             <div className="bg-white w-full max-w-3xl rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+              {/* TABS */}
               <div className="relative flex w-full bg-gray-50/50 border-b border-gray-200">
-                <div
-                  className={`absolute bottom-0 h-[3px] bg-blue-600 transition-all duration-300 ease-in-out w-1/2 ${activeTab === 'smiles' ? 'left-0' : 'left-1/2'
-                    }`}
-                />
-
-                <button
-                  onClick={() => setActiveTab('smiles')}
-                  className={`flex-1 py-4 flex items-center justify-center gap-2 font-nunito_sans font-bold transition-colors z-10 ${activeTab === 'smiles' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
-                    }`}
-                >
-                  <KeyboardIcon fontSize="small" /> Entrada SMILES
-                </button>
-
-                <button
-                  onClick={() => setActiveTab('file')}
-                  className={`flex-1 py-4 flex items-center justify-center gap-2 font-nunito_sans font-bold transition-colors z-10 ${activeTab === 'file' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
-                    }`}
-                >
-                  <UploadFileIcon fontSize="small" /> Upload de Arquivo
-                </button>
+                <div className={`absolute bottom-0 h-[3px] bg-blue-600 transition-all duration-300 w-1/2 ${manager.activeTab === 'smiles' ? 'left-0' : 'left-1/2'}`} />
+                <button onClick={() => manager.setActiveTab('smiles')} className={`flex-1 py-4 flex items-center justify-center gap-2 font-nunito_sans font-bold z-10 ${manager.activeTab === 'smiles' ? 'text-blue-600' : 'text-gray-500 hover:bg-gray-100'}`}><KeyboardIcon fontSize="small" /> Entrada SMILES</button>
+                <button onClick={() => manager.setActiveTab('file')} className={`flex-1 py-4 flex items-center justify-center gap-2 font-nunito_sans font-bold z-10 ${manager.activeTab === 'file' ? 'text-blue-600' : 'text-gray-500 hover:bg-gray-100'}`}><UploadFileIcon fontSize="small" /> Upload de Arquivo</button>
               </div>
 
+              {/* CONTEÚDO DAS TABS */}
               <div className="p-8 min-h-[250px] flex flex-col justify-between">
                 <div className="flex-grow">
-                  {activeTab === 'smiles' ? (
-                    <div className="animate-fade-in-up">
-                      <label className="block text-sm font-bold text-gray-700 mb-2 font-inter">
-                        Código SMILES da Molécula
+
+                  {manager.activeTab === 'smiles' ? (
+                    <div className="animate-fade-in-up flex flex-col h-full">
+                      
+                      {/* LABEL TOP */}
+                      <label className="block text-sm font-bold text-slate-700 font-inter mb-2">
+                        Código(s) SMILES
                       </label>
-                      <textarea
-                        value={smilesInput}
-                        onChange={(e) => setSmilesInput(e.target.value)}
-                        placeholder="Ex: CC(=O)OC1=CC=CC=C1C(=O)O (Aspirina)"
-                        className="w-full h-32 p-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none font-mono text-gray-800"
-                      ></textarea>
-                    </div>
-                  ) : (
-                    <div className="animate-fade-in-up">
-                      <label
-                        htmlFor="file-upload"
-                        className={`flex flex-col items-center justify-center h-32 border-2 border-dashed rounded-xl transition-colors cursor-pointer ${uploadedFile ? 'border-blue-400 bg-blue-50' : 'border-gray-300 bg-gray-50 hover:bg-gray-100 hover:border-blue-400'
-                          }`}
-                      >
-                        {uploadedFile ? (
-                          <>
-                            <InsertDriveFileIcon className="text-blue-500 mb-2" fontSize="large" />
-                            <Typography className="font-inter text-blue-700 font-bold">
-                              {uploadedFile.name}
-                            </Typography>
-                            <Typography className="font-inter text-xs text-blue-500 mt-1">
-                              Clique para trocar de arquivo
-                            </Typography>
-                          </>
+
+                      {/* ÁREA DE TEXTO (Premium Input) */}
+                      <div className="relative group flex-1 flex flex-col">
+                        <textarea
+                        value={manager.smilesInput} onChange={(e) => manager.setSmilesInput(e.target.value)}
+                        placeholder="Ex: CC(=O)OC1=CC=CC=C1C(=O)O&#10;Para múltiplas moléculas, separe por vírgula ou quebra de linha..."
+                        className="w-full h-32 p-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none font-mono text-gray-800 custom-scrollbar"
+                      />
+                      </div>
+
+                      {/* BARRA DE STATUS (Footer do Input) */}
+                      <div className="flex justify-between items-center mt-3 px-1">
+                        
+                        {/* Botão Carregar Exemplos */}
+                        <Tooltip title="Preencher com moléculas de teste seguras" placement="bottom-start">
+                          <button
+                            onClick={manager.handleLoadSmilesExamples}
+                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-50/50 border border-blue-100 text-blue-600 hover:bg-blue-100 hover:border-blue-300 transition-all font-inter text-[11px] font-bold shadow-sm"
+                          >
+                            <ScienceIcon sx={{ fontSize: 14 }} /> 
+                            Carregar Exemplos
+                          </button>
+                        </Tooltip>
+
+                        {/* Status / Badge de Contagem */}
+                        {manager.parsedSmilesList.length > 0 ? (
+                          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border font-inter text-[10px] font-extrabold uppercase tracking-wider transition-all shadow-sm ${
+                            manager.parsedSmilesList.length === 1 
+                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
+                              : 'bg-blue-50 text-blue-700 border-blue-200'
+                          }`}>
+                            <span className={`w-1.5 h-1.5 rounded-full animate-pulse ${
+                              manager.parsedSmilesList.length === 1 ? 'bg-emerald-500' : 'bg-blue-500'
+                            }`} />
+                            {manager.parsedSmilesList.length} {manager.parsedSmilesList.length === 1 ? 'Molécula detectada' : 'Moléculas (Lote)'}
+                          </div>
                         ) : (
-                          <>
-                            <UploadFileIcon className="text-gray-400 mb-2" fontSize="large" />
-                            <Typography className="font-inter text-gray-600 font-medium">
-                              Clique ou arraste seu arquivo aqui
+                          <span className="font-inter text-[11px] font-medium text-slate-400">
+                            Aguardando entrada...
+                          </span>
+                        )}
+
+                      </div>
+                    </div>
+                  )  : (
+                    <div className="animate-fade-in-up">
+                      <label 
+                        htmlFor="file-upload" 
+                        onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                        onDragLeave={(e) => { e.preventDefault(); setIsDragging(false); }}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          setIsDragging(false);
+                          if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                            manager.setUploadedFile(e.dataTransfer.files[0]);
+                          }
+                        }}
+                        className={`flex flex-col items-center justify-center h-40 border-2 border-dashed rounded-xl transition-all duration-300 cursor-pointer ${
+                          isDragging 
+                            ? 'border-blue-500 bg-blue-50 scale-[1.02] shadow-inner' 
+                            : manager.uploadedFile 
+                              ? 'border-blue-400 bg-blue-50/50' 
+                              : 'border-slate-300 bg-slate-50 hover:bg-slate-100 hover:border-blue-400'
+                        }`}
+                      >
+                        {manager.uploadedFile ? (
+                          <div className="flex flex-col items-center animate-fade-in-up">
+                            <InsertDriveFileIcon className="text-blue-500 mb-2" sx={{ fontSize: 40 }} />
+                            <Typography className="font-inter text-blue-700 font-bold text-sm">
+                              {manager.uploadedFile.name}
                             </Typography>
-                            <Typography className="font-inter text-xs text-gray-400 mt-1">
+                            <Typography className="font-inter text-[10px] font-bold text-blue-400 mt-1 uppercase tracking-wider">
+                              Clique ou arraste outro para substituir
+                            </Typography>
+                          </div>
+                        ) : (
+                          <div className="flex flex-col items-center pointer-events-none">
+                            <UploadFileIcon className={`mb-3 transition-colors duration-300 ${isDragging ? 'text-blue-500' : 'text-slate-400'}`} sx={{ fontSize: 48 }} />
+                            <Typography className={`font-inter font-bold text-sm transition-colors ${isDragging ? 'text-blue-600' : 'text-slate-600'}`}>
+                              {isDragging ? 'Solte o ficheiro agora!' : 'Clique ou arraste o seu ficheiro aqui'}
+                            </Typography>
+                            <Typography className="font-inter text-[11px] text-slate-400 mt-1.5 font-medium">
                               Suporta .CSV, .SDF ou .TXT (Máx. 5MB)
                             </Typography>
-                          </>
+                          </div>
                         )}
-                        <input
-                          id="file-upload"
-                          type="file"
-                          className="hidden"
-                          accept=".csv, .sdf, .txt"
-                          onChange={handleFileChange}
+                        <input 
+                          id="file-upload" 
+                          type="file" 
+                          className="hidden" 
+                          accept=".csv, .sdf, .txt" 
+                          onChange={(e) => e.target.files && manager.setUploadedFile(e.target.files[0])} 
                         />
                       </label>
+
+                      {/* REDESIGN DO MODELO DE ARQUIVO (Helper Box Premium) */}
+                      <div className="mt-6 p-4 bg-slate-50/50 hover:bg-slate-50 border border-slate-200 rounded-xl flex flex-col sm:flex-row items-center justify-between gap-4 transition-colors">
+                        
+                        {/* Lado Esquerdo: Ícone e Textos */}
+                        <div className="flex items-center gap-3">
+                          <div className="bg-blue-100/50 p-2 rounded-lg text-blue-600">
+                            <InsertDriveFileIcon sx={{ fontSize: 18 }} />
+                          </div>
+                          <div className="flex flex-col">
+                            <Typography className="font-inter text-xs font-bold text-slate-700">
+                              Precisa de um modelo de teste?
+                            </Typography>
+                            <Typography className="font-inter text-[10px] text-slate-500">
+                              Baixe um CSV formatado para testar a predição em lote.
+                            </Typography>
+                          </div>
+                        </div>
+
+                        {/* Lado Direito: Controles */}
+                        <div className="flex items-center gap-2 w-full sm:w-auto">
+                          
+                          {/* Select Customizado com Tailwind */}
+                          <div className="relative">
+                            <select
+                              value={manager.exampleCount}
+                              onChange={(e) => manager.setExampleCount(Number(e.target.value))}
+                              className="appearance-none bg-white border border-slate-200 text-slate-600 font-inter text-[11px] font-bold rounded-lg py-1.5 pl-3 pr-7 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer shadow-sm transition-all"
+                            >
+                              <option value={5}>5 moléculas</option>
+                              <option value={10}>10 moléculas</option>
+                              <option value={20}>20 moléculas</option>
+                              <option value={50}>50 moléculas</option>
+                            </select>
+                            {/* Ícone de seta customizado que fica por cima do Select */}
+                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-400">
+                              <KeyboardArrowDownIcon sx={{ fontSize: 14 }} />
+                            </div>
+                          </div>
+
+                          {/* Botão de Download Moderno */}
+                          <Tooltip title="Baixar CSV para upload">
+                            <button
+                              onClick={manager.handleDownloadExample}
+                              className="flex items-center gap-1.5 bg-white border border-slate-200 text-blue-600 hover:bg-blue-50 hover:border-blue-200 font-inter font-bold text-[11px] py-1.5 px-3 rounded-lg transition-all shadow-sm shrink-0"
+                            >
+                              <DownloadIcon sx={{ fontSize: 14 }} />
+                              Baixar Exemplo
+                            </button>
+                          </Tooltip>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
 
-                <div className="mt-8 flex justify-end">
+                {/* BOTÃO EXECUTAR */}
+                <div className="mt-8 pt-6 border-t border-slate-100 flex justify-end">
                   <Button
                     variant="contained"
                     size="large"
-                    onClick={handlePredict}
-                    disabled={isButtonDisabled}
-                    className={`rounded-full px-8 py-3 normal-case font-bold flex items-center gap-2 transition-all ${isButtonDisabled
-                        ? 'bg-gray-200 text-gray-400 shadow-none'
-                        : 'bg-blue-600 text-white shadow-lg hover:bg-blue-700 hover:scale-105 active:scale-95'
+                    onClick={manager.handlePredict}
+                    disabled={manager.isButtonDisabled}
+                    className={`rounded-full px-8 py-3 normal-case font-bold flex items-center gap-2 transition-all duration-300 ${manager.isButtonDisabled
+                        ? 'bg-slate-100 text-slate-400 shadow-none'
+                        : 'bg-blue-600 text-white shadow-[0_8px_20px_-6px_rgba(37,99,235,0.4)] hover:bg-blue-700 hover:-translate-y-0.5'
                       }`}
                   >
-                    <ScienceIcon fontSize="small" /> Executar Predição
+                    <ScienceIcon fontSize="small" />
+                    Executar Predição
                   </Button>
                 </div>
               </div>
-
             </div>
           </div>
         )}
 
         {/* FASE 2: LOADING */}
-        {phase === 'loading' && (
-          <div className="flex-grow flex flex-col items-center justify-center animate-fade-in-up w-full h-full">
-            <CircularProgress size={60} thickness={4} className="text-blue-600 mb-6" />
-            <Typography variant="h5" className="font-nunito_sans font-bold text-gray-800 mb-2">
-              Processando Estruturas...
-            </Typography>
-            <Typography className="font-inter text-gray-500 max-w-md text-center">
-              Nossos modelos de Machine Learning estão calculando propriedades de Absorção, Distribuição, Metabolismo, Excreção e Toxicidade.
-            </Typography>
-          </div>
-        )}
+        {manager.phase === 'loading' && <LoadingView />}
 
-        {/* FASE 3: RESULTADOS — single (SMILES) ou batch (arquivo) */}
-        {phase === 'results' && activeTab === 'smiles' && (
-          <SingleMoleculeLayout
-            smiles={smilesInput}
-            onBack={handleResetRequest}
-          />
+        {/* FASE 3: RESULTADOS */}
+        {manager.phase === 'results' && manager.activeTab === 'smiles' && manager.parsedSmilesList.length === 1 && (
+          <SingleMoleculeLayout smiles={manager.parsedSmilesList[0]} onBack={() => manager.setShowWarningModal(true)} molecule={manager.predictedMolecules[0]} />
         )}
-
-        {phase === 'results' && activeTab === 'file' && (
-          <ResultsLayout
-            onBack={handleResetRequest}
-            isBatch={true}
-          />
+        {manager.phase === 'results' && ((manager.activeTab === 'smiles' && manager.parsedSmilesList.length > 1) || manager.activeTab === 'file') && (
+          <ResultsLayout onBack={() => manager.setShowWarningModal(true)} isBatch={true} molecules={manager.predictedMolecules}/>
         )}
 
       </main>
 
-      {phase !== 'results' && (
-        <Footer />
-      )}
+      {manager.phase !== 'results' && <Footer />}
 
-      {/* ========================================================================= */}
-      {/* MODAL DE CONFIRMAÇÃO (POPUP)                                              */}
-      {/* ========================================================================= */}
-      <Dialog
-        open={showWarningModal}
-        onClose={handleCancelReset}
-        slotProps={{
-          backdrop: {
-            sx: {
-              backdropFilter: 'blur(3px)',
-              backgroundColor: 'rgba(15, 23, 42, 0.4)',
-            }
-          }
-        }}
-        PaperProps={{
-          sx: {
-            borderRadius: 4,
-            p: 1,
-            minWidth: { xs: '90vw', sm: '420px' },
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-          }
-        }}
-      >
-        <DialogTitle sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', pb: 1, pt: 4 }}>
-          <div className="bg-red-50 text-red-500 p-4 rounded-full mb-4">
-            <WarningAmberIcon sx={{ fontSize: 48 }} />
-          </div>
-          <Typography variant="h5" sx={{ fontFamily: 'Nunito Sans, sans-serif', fontWeight: 800, color: '#0f172a' }}>
-            Descartar resultados?
-          </Typography>
-        </DialogTitle>
-
-        <DialogContent sx={{ textAlign: 'center', pb: 4 }}>
-          <DialogContentText sx={{ fontFamily: 'Inter, sans-serif', color: '#64748b', fontSize: '0.95rem', lineHeight: 1.6 }}>
-            Você está prestes a sair desta análise. Todos os <strong>filtros aplicados</strong> e <strong>cálculos gerados</strong> serão perdidos. Deseja realmente iniciar uma nova predição?
-          </DialogContentText>
-        </DialogContent>
-
-        <DialogActions sx={{ justifyContent: 'center', gap: 2, px: 3, pb: 3 }}>
-          <Button
-            onClick={handleCancelReset}
-            variant="outlined"
-            color="inherit"
-            disableElevation
-            sx={{
-              fontFamily: 'Inter, sans-serif',
-              fontWeight: 600,
-              textTransform: 'none',
-              borderRadius: 2,
-              px: 3,
-              py: 1.2,
-              color: '#64748b',
-              borderColor: '#e2e8f0',
-              '&:hover': { backgroundColor: '#f8fafc', borderColor: '#cbd5e1' }
-            }}
-          >
-            Cancelar
-          </Button>
-          <Button
-            onClick={handleConfirmReset}
-            variant="contained"
-            color="error"
-            disableElevation
-            sx={{
-              fontFamily: 'Nunito Sans, sans-serif',
-              fontWeight: 800,
-              textTransform: 'none',
-              borderRadius: 2,
-              px: 4,
-              py: 1.2,
-              backgroundColor: '#ef4444',
-              '&:hover': { backgroundColor: '#dc2626' }
-            }}
-          >
-            Sim, descartar
-          </Button>
-        </DialogActions>
-      </Dialog>
-
+      <WarningModal
+        open={manager.showWarningModal}
+        onCancel={() => manager.setShowWarningModal(false)}
+        onConfirm={manager.handleConfirmReset}
+      />
     </div>
   );
 };

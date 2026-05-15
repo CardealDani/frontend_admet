@@ -127,6 +127,7 @@ interface ResultsTableProps {
 }
 
 const ResultsTable = ({ molecules, onRowClick, selectedMolId }: ResultsTableProps) => {
+  console.log("Molecules in ResultsTable:", molecules);
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDir,   setSortDir]   = useState<SortDir>('asc');
   const [page,      setPage]      = useState(0);

@@ -1,0 +1,60 @@
+// src/mocks/smilesExamples.mock.ts
+
+export interface SmilesExample {
+  name: string;
+  smiles: string;
+}
+
+// Lista de 50 moléculas farmacológicas e bioquímicas reais para testes
+export const SAFE_EXAMPLES: SmilesExample[] = [
+  { name: 'Aspirina', smiles: 'CC(=O)OC1=CC=CC=C1C(=O)O' },
+  { name: 'Cafeína', smiles: 'CN1C=NC2=C1C(=O)N(C(=O)N2C)C' },
+  { name: 'Paracetamol', smiles: 'CC(=O)NC1=CC=C(O)C=C1' },
+  { name: 'Ibuprofeno', smiles: 'CC(C)CC1=CC=C(C=C1)C(C)C(=O)O' },
+  { name: 'Metformina', smiles: 'CN(C)C(=N)N=C(N)N' },
+  { name: 'Amoxicilina', smiles: 'CC1(C(N2C(S1)C(C2=O)NC(=O)C(C3=CC=C(C=C3)O)N)C(=O)O)C' },
+  { name: 'Omeprazol', smiles: 'CC1=CN=C(C(=C1OC)C)CS(=O)C2=NC3=C(N2)C=C(C=C3)OC' },
+  { name: 'Losartana', smiles: 'CCCCC1=NC(=C(N1CC2=CC=C(C=C2)C3=CC=CC=C3C4=NNN=N4)CO)Cl' },
+  { name: 'Atorvastatina', smiles: 'CC(C)C1=C(C(=C(N1CCC(CC(CC(=O)O)O)O)C2=CC=C(C=C2)F)C3=CC=CC=C3)C(=O)NC4=CC=CC=C4' },
+  { name: 'Azitromicina', smiles: 'CCC1C(C(C(N(CC(CC(C(C(C(C(C(=O)O1)C)OC2CC(C(C(O2)C)O)(C)OC)C)C)O)C)C)C)O)(C)O' },
+  { name: 'Fluoxetina', smiles: 'CNC(C)CCC(C1=CC=CC=C1)OC2=CC=C(C=C2)C(F)(F)F' },
+  { name: 'Sertralina', smiles: 'CNC1CCC(C2=CC=CC=C12)C3=CC(=C(C=C3)Cl)Cl' },
+  { name: 'Diazepam', smiles: 'CC1=C(C=C(C=C1)Cl)N(C(=O)CN=C2C3=CC=CC=C3)C' },
+  { name: 'Ciprofloxacino', smiles: 'C1CC1N2C=C(C(=O)C3=CC(=C(C=C32)N4CCNCC4)F)C(=O)O' },
+  { name: 'Pantoprazol', smiles: 'CC1=CN=C(C(=C1)OC)CS(=O)C2=NC3=C(N2)C=CC(=C3)OC(F)F' },
+  { name: 'Simvastatina', smiles: 'CCC(C)(C)C(=O)OC1CC(C=C2C1C(C(C=C2)C)CCC3CC(CC(=O)O3)O)C' },
+  { name: 'Amlodipina', smiles: 'CCOC(=O)C1=C(NC(=C(C1C2=CC=CC(=C2)Cl)C(=O)OC)C)COCCN' },
+  { name: 'Metoprolol', smiles: 'CC(C)NCC(COC1=CC=C(C=C1)CCOC)O' },
+  { name: 'Lisinopril', smiles: 'C1CC(N(C1)C(=O)C(CCC2=CC=CC=C2)NC(CCCCN)C(=O)O)C(=O)O' },
+  { name: 'Escitalopram', smiles: 'CN(C)CCCC1(C2=C(CO1)C=C(C=C2)C#N)C3=CC=C(C=C3)F' },
+  { name: 'Alprazolam', smiles: 'CC1=NN=C2N1C3=C(C=CC(=C3)Cl)C(=NC2)C4=CC=CC=C4' },
+  { name: 'Valsartana', smiles: 'CCCCC(=O)N(CC1=CC=C(C=C1)C2=CC=CC=C2C3=NNN=N3)C(C(C)C)C(=O)O' },
+  { name: 'Meloxicam', smiles: 'CC1=C(SC(=N1)NC(=O)C2=C(C=CC=C2S(=O)(=O)C)O)C' },
+  { name: 'Diclofenaco', smiles: 'C1=CC=C(C(=C1)CC(=O)O)NC2=C(C=CC=C2Cl)Cl' },
+  { name: 'Naproxeno', smiles: 'CC(C1=CC2=C(C=C1)C=C(C=C2)OC)C(=O)O' },
+  { name: 'Celecoxibe', smiles: 'CC1=CC=C(C=C1)C2=CC(=NN2C3=CC=C(C=C3)S(=O)(=O)N)C(F)(F)F' },
+  { name: 'Ranitidina', smiles: 'CN/C(=C\\N[N+](=O)[O-])/NCCSC1=CC=C(O1)CN(C)C' },
+  { name: 'Famotidina', smiles: 'C(CSC1=C(N=C(S1)N)N)N=C(N)NS(=O)(=O)N' },
+  { name: 'Ácido Ascórbico (Vit C)', smiles: 'C(C(C1C(=C(C(=O)O1)O)O)O)O' },
+  { name: 'Retinol (Vit A)', smiles: 'CC1=C(C(CCC1)(C)C)C=CC=C(C)C=CC=C(C)C=CO' },
+  { name: 'Colecalciferol (Vit D3)', smiles: 'CC(CCCC(C)C)C1CCC2C1(CCCC2=CC=C3CC(CCC3=C)O)C' },
+  { name: 'Melatonina', smiles: 'CC(=O)NCCC1=CNC2=C1C=C(C=C2)OC' },
+  { name: 'Serotonina', smiles: 'C1=CC2=C(C=C1O)C(=CN2)CCN' },
+  { name: 'Dopamina', smiles: 'C1=CC(=C(C=C1CCN)O)O' },
+  { name: 'Adrenalina', smiles: 'CNC[C@H](C1=CC(=C(C=C1)O)O)O' },
+  { name: 'Histamina', smiles: 'C1=C(NC=N1)CCN' },
+  { name: 'Cortisol', smiles: 'CC12CCC(=O)C=C1CCC3C2C(CC4(C3CCC4(C(=O)CO)O)C)O' },
+  { name: 'Testosterona', smiles: 'CC12CCC3C(C1CCC2=O)CCC4(C3CCC4O)C' },
+  { name: 'Estradiol', smiles: 'CC12CCC3C(C1CCC2O)CCC4=C3C=CC(=C4)O' },
+  { name: 'Progesterona', smiles: 'CC(=O)C1CCC2C1(CCC3C2CCC4=CC(=O)CCC34C)C' },
+  { name: 'Nicotina', smiles: 'CN1CCCC1C2=CN=CC=C2' },
+  { name: 'Teofilina', smiles: 'CN1C2=C(C(=O)N(C1=O)C)NC=N2' },
+  { name: 'Cloroquina', smiles: 'CCN(CC)CCCC(C)NC1=C2C=CC(=CC2=NC=C1)Cl' },
+  { name: 'Hidroxicloroquina', smiles: 'CCN(CCO)CCCC(C)NC1=C2C=CC(=CC2=NC=C1)Cl' },
+  { name: 'Haloperidol', smiles: 'C1CN(CCC1(C2=CC=C(C=C2)Cl)O)CCCC(=O)C3=CC=C(C=C3)F' },
+  { name: 'Cetoconazol', smiles: 'CC1=CC=C(C=C1)N2C=CN=C2' },
+  { name: 'Fluconazol', smiles: 'C1=CN(C=N1)CC(CN2C=NC=N2)(C3=C(C=C(C=C3)F)F)O' },
+  { name: 'Oseltamivir', smiles: 'CCC(CC)OC1C=C(CC(C1NC(=O)C)N)C(=O)OCC' },
+  { name: 'Sildenafil (Viagra)', smiles: 'CCCC1=NN(C2=C1N=C(NC2=O)C3=C(C=CC(=C3)S(=O)(=O)N4CCN(CC4)C)OCCC)C' },
+  { name: 'Tadalafil (Cialis)', smiles: 'CN1CC(=O)N2C(C1)C3=C(NC4=CC=CC=C34)C(C2)C5=CC6=C(C=C5)OCO6' }
+];

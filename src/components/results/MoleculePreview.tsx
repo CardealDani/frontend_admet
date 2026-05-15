@@ -33,20 +33,41 @@ const RiskIndicator = ({
   label: string; value: ToxValue; tooltip: string; level: RiskLevel;
 }) => (
   <div className={`p-2.5 rounded-xl border flex items-center justify-between shadow-sm transition-transform hover:scale-[1.01] ${riskStyles[level]}`}>
+    
+    {/* Lado Esquerdo: Label e Tooltip */}
     <div className="flex items-center gap-2">
       <Typography className="font-inter font-bold text-[12px]">{label}</Typography>
       <Tooltip title={tooltip} placement="top">
         <InfoOutlinedIcon sx={{ fontSize: 14 }} className="opacity-50 cursor-help hover:opacity-100 transition-opacity" />
       </Tooltip>
     </div>
-    <div className="flex flex-col items-end gap-0.5">
-      <div className="flex items-center gap-1.5">
+
+    {/* Lado Direito: Badge Split Premium (Categoria + Score Numérico) */}
+    <div className={`flex items-center overflow-hidden rounded-lg border shadow-sm bg-white/50 ${
+      level === 'good' ? 'border-emerald-200' : level === 'medium' ? 'border-amber-200' : 'border-rose-200'
+    }`}>
+      
+      {/* Parte 1: Ícone + Categoria */}
+      <div className={`flex items-center gap-1 px-2 py-1 ${
+        level === 'good' ? 'bg-emerald-100/40' : level === 'medium' ? 'bg-amber-100/40' : 'bg-rose-100/40'
+      }`}>
         <RiskIcon level={level} />
-        <Typography className="font-mono text-[11px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded">
+        <span className="font-inter text-[9px] font-extrabold uppercase tracking-wider mt-[1px]">
           {value.category}
-        </Typography>
+        </span>
       </div>
-      <span className="font-mono text-[10px] opacity-60">{value.raw.toFixed(2)}</span>
+
+      {/* Parte 2: Valor Numérico (Score Bruto) */}
+      <Tooltip title="Score / Probabilidade da Predição" placement="top">
+        <div className={`px-2 py-1 bg-white border-l font-mono text-[10px] font-bold cursor-help transition-colors ${
+          level === 'good' ? 'border-emerald-200 text-emerald-700 hover:bg-emerald-50' 
+          : level === 'medium' ? 'border-amber-200 text-amber-700 hover:bg-amber-50' 
+          : 'border-rose-200 text-rose-700 hover:bg-rose-50'
+        }`}>
+          {value.raw.toFixed(2)}
+        </div>
+      </Tooltip>
+
     </div>
   </div>
 );
@@ -171,7 +192,7 @@ const MoleculePreview = ({ molecule: mol, onClose, onViewFullReport }: MoleculeP
           { label: 'LogP', val: mol.logp.toFixed(2),  unit: ''   },
           { label: 'TPSA', val: mol.tpsa.toFixed(1),  unit: 'Å²' },
         ].map(stat => (
-          <div key={stat.label} className="flex-1 bg-white rounded-xl border border-slate-200 shadow-sm p-3 flex flex-col items-center justify-center">
+          <div key={stat.label} className="flex-1 bg-white rounded-xl border border-slate-200 shadow-sm p-3 flex flex-col items-center justify-center shadow-sm transition-transform hover:scale-[1.03]">
             <p className="font-inter text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">{stat.label}</p>
             <p className="font-mono text-sm font-black text-slate-700">
               {stat.val}{stat.unit && <span className="text-[10px] font-bold text-slate-400 ml-0.5">{stat.unit}</span>}
@@ -181,7 +202,7 @@ const MoleculePreview = ({ molecule: mol, onClose, onViewFullReport }: MoleculeP
       </div>
 
       {/* DRUG-LIKENESS */}
-      <div className="mx-5 mb-5 flex flex-col gap-3 bg-white border border-slate-200 rounded-xl p-3.5 shadow-sm hover:shadow-md transition-all">
+      <div className="mx-5 mb-5 flex flex-col gap-3 bg-white border border-slate-200 rounded-xl p-3.5 shadow-sm transition-transform hover:scale-[1.01]">
         <div className="flex items-center gap-1.5 px-0.5">
           <span className="font-inter text-[11px] font-extrabold text-slate-500 uppercase tracking-widest">Drug-likeness</span>
           <Tooltip title="Regras empíricas de viabilidade oral (Lipinski Rule of 5 e Pfizer 3/75)">
@@ -199,7 +220,7 @@ const MoleculePreview = ({ molecule: mol, onClose, onViewFullReport }: MoleculeP
       </div>
 
       {/* RADAR ADMET */}
-      <div className="mx-5 mb-5 bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
+      <div className="mx-5 mb-5 bg-white rounded-2xl border border-slate-200 shadow-sm p-4 shadow-sm transition-transform hover:scale-[1.01]">
         <div className="flex justify-between items-center mb-1">
           <p className="font-inter text-[11px] font-extrabold text-slate-500 uppercase tracking-widest">Perfil ADMET</p>
           <Tooltip title="Impressão digital normalizada. Quanto maior a área, melhor o perfil geral.">
@@ -216,9 +237,9 @@ const MoleculePreview = ({ molecule: mol, onClose, onViewFullReport }: MoleculeP
           <p className="font-inter text-[11px] font-extrabold text-slate-500 uppercase tracking-widest">Alertas de Toxicidade</p>
         </div>
         <div className="space-y-2.5">
-          <RiskIndicator label="Mutagenicidade (AMES)" value={mol.ames}   tooltip="Predição de mutagenicidade. Positivo indica potencial de causar dano ao DNA." level={toxRisk(mol.ames)} />
-          <RiskIndicator label="Cardiotóxico (hERG)"   value={mol.herg}   tooltip="Risco de bloqueio dos canais hERG, podendo causar arritmias fatais."           level={toxRisk(mol.herg)} />
-          <RiskIndicator label="Hepatotoxicidade"      value={mol.hepato} tooltip="Risco de dano hepático induzido pela droga (DILI)."                            level={toxRisk(mol.hepato)} />
+          <RiskIndicator label="Mutagenicidade (AMES)" value={mol.ames}   tooltip="Avalia o potencial mutagênico. 'Excelente' indica um resultado Negativo (sem risco de dano ao DNA)." level={toxRisk(mol.ames)} />
+          <RiskIndicator label="Cardiotóxico (hERG)"   value={mol.herg}   tooltip="Inibição do canal hERG. 'Excelente' indica baixo risco de arritmias cardíacas."           level={toxRisk(mol.herg)} />
+          <RiskIndicator label="Hepatotoxicidade"      value={mol.hepato} tooltip="Risco de lesão hepática (DILI). 'Excelente' indica baixa probabilidade de toxicidade no fígado."                            level={toxRisk(mol.hepato)} />
         </div>
       </div>
     </div>

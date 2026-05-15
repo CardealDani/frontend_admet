@@ -3,12 +3,12 @@ import { Typography, IconButton, Tooltip, Badge } from '@mui/material';
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import { LuFilter } from 'react-icons/lu';
 
-import { usePresets }       from '../hooks/usePresets';
-import type { UseAdmetFiltersReturn } from '../hooks/useAdmetFilters';
+import { usePresets } from '../../hooks/usePresets';
+import type { UseAdmetFiltersReturn } from '../../hooks/useAdmetFilters';
 
-import { PresetBar }        from './filters/PresetBar';
-import { DiffBanner }       from './filters/DiffBanner';
-import { FooterActions }    from './filters/FooterActions';
+import { PresetBar } from './filters/PresetBar';
+import { DiffBanner } from './filters/DiffBanner';
+import { FooterActions } from './filters/FooterActions';
 
 import { PfqMedChemSection } from './filters/sections/PfqMedChemSection';
 import { AbsorptionSection } from './filters/sections/AbsorptionSection';
@@ -22,7 +22,7 @@ interface FilterSidebarProps {
   isSidebarOpen: boolean;
   toggleSidebar: () => void;
   // A MÁGICA 1: Recebemos o motor de filtros do pai
-  filterEngine: UseAdmetFiltersReturn; 
+  filterEngine: UseAdmetFiltersReturn;
 }
 
 const FilterSidebar = ({ isSidebarOpen, toggleSidebar, filterEngine }: FilterSidebarProps) => {
@@ -53,10 +53,10 @@ const FilterSidebar = ({ isSidebarOpen, toggleSidebar, filterEngine }: FilterSid
 
   // Os Handlers agora só acionam o motor do pai. O ResultsLayout se atualiza sozinho!
   const handleApply = () => applyFilters();
-  const handleReset = () =>{
-        setActivePresetId('default')
+  const handleReset = () => {
+    setActivePresetId('default')
     resetFilters();
-  } 
+  }
 
   const handleSelectPreset = (preset: (typeof allPresets)[number]) => {
     loadPreset(preset.filters);
@@ -77,11 +77,10 @@ const FilterSidebar = ({ isSidebarOpen, toggleSidebar, filterEngine }: FilterSid
             <Tooltip title={isSidebarOpen ? '' : 'Mostrar Filtros'} placement="right">
               <IconButton
                 onClick={toggleSidebar}
-                className={`transition-all duration-300 ${
-                  !isSidebarOpen
+                className={`transition-all duration-300 ${!isSidebarOpen
                     ? 'bg-blue-100 text-blue-600 hover:bg-blue-200'
                     : 'bg-transparent text-blue-500 hover:bg-gray-100'
-                }`}
+                  }`}
                 sx={{ width: 40, height: 40 }}
               >
                 <Badge
@@ -97,17 +96,15 @@ const FilterSidebar = ({ isSidebarOpen, toggleSidebar, filterEngine }: FilterSid
 
             <Typography
               variant="h6"
-              className={`font-nunito_sans font-extrabold text-gray-800 text-lg transition-opacity duration-200 whitespace-nowrap ${
-                isSidebarOpen ? 'opacity-100' : 'opacity-0'
-              }`}
+              className={`font-nunito_sans font-extrabold text-gray-800 text-lg transition-opacity duration-200 whitespace-nowrap ${isSidebarOpen ? 'opacity-100' : 'opacity-0'
+                }`}
             >
               Filtros
             </Typography>
 
             <div
-              className={`font-inter w-6 h-6 mx-2 rounded-full bg-blue-500 transition-opacity duration-200 flex items-center justify-center ${
-                isSidebarOpen && counts.total > 0 ? 'opacity-100' : 'opacity-0'
-              }`}
+              className={`font-inter w-6 h-6 mx-2 rounded-full bg-blue-500 transition-opacity duration-200 flex items-center justify-center ${isSidebarOpen && counts.total > 0 ? 'opacity-100' : 'opacity-0'
+                }`}
             >
               <Typography variant="body2" className="text-[11px] text-white font-bold leading-none">
                 {counts.total}
@@ -116,9 +113,8 @@ const FilterSidebar = ({ isSidebarOpen, toggleSidebar, filterEngine }: FilterSid
           </div>
 
           <div
-            className={`flex items-center transition-opacity duration-200 ${
-              isSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
-            }`}
+            className={`flex items-center transition-opacity duration-200 ${isSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+              }`}
             onClick={toggleSidebar}
           >
             <Tooltip title="Ocultar Filtros" placement="left">
@@ -130,9 +126,8 @@ const FilterSidebar = ({ isSidebarOpen, toggleSidebar, filterEngine }: FilterSid
 
       {/* CONTEÚDO SCROLLÁVEL */}
       <div
-        className={`flex flex-col flex-1 min-h-0 transition-opacity duration-200 ${
-          isSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
-        }`}
+        className={`flex flex-col flex-1 min-h-0 transition-opacity duration-200 ${isSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+          }`}
       >
         <div className="flex-1 overflow-y-auto pr-1 pl-3 custom-scrollbar">
 

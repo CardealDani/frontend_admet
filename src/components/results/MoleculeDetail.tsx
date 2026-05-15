@@ -68,11 +68,30 @@ const scoreDomains = (mol: Molecule): number[] => {
 };
 
 // ─── Sub-componentes ─────────────────────────────────────────────────────────
-
 const Badge = ({ text, level }: { text: string; level: RiskLevel }) => (
   <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border font-inter shadow-sm ${BADGE_CLS[level]}`}>
     {text}
   </span>
+);
+
+// NOVO: Componente Premium para mostrar Categoria + Valor Bruto juntos
+const SplitBadge = ({ text, subText, level }: { text: string; subText: string; level: RiskLevel }) => (
+  <div className={`flex items-center overflow-hidden rounded-md border shadow-sm bg-white/50 ${
+    level === 'good' ? 'border-emerald-200' : level === 'medium' ? 'border-amber-200' : 'border-rose-200'
+  }`}>
+    <span className={`font-inter text-[9px] font-extrabold px-2 py-1 uppercase tracking-wider ${
+      level === 'good' ? 'bg-emerald-50 text-emerald-700' : level === 'medium' ? 'bg-amber-50 text-amber-700' : 'bg-rose-50 text-rose-700'
+    }`}>
+      {text}
+    </span>
+    <span className={`bg-white font-mono text-[10px] font-bold px-2 py-1 border-l cursor-help transition-colors ${
+      level === 'good' ? 'text-emerald-700 border-emerald-100 hover:bg-emerald-50' : 
+      level === 'medium' ? 'text-amber-700 border-amber-100 hover:bg-amber-50' : 
+      'text-rose-700 border-rose-100 hover:bg-rose-50'
+    }`}>
+      {subText}
+    </span>
+  </div>
 );
 
 const PropRow = ({
@@ -82,29 +101,35 @@ const PropRow = ({
   value?: string;
   badge?: { text: string; level: RiskLevel };
   tooltip?: string;
-  subValue?: string; // valor numérico bruto exibido em cinza abaixo do badge
+  subValue?: string; 
 }) => (
   <div className="flex justify-between items-center py-2.5 border-b border-slate-100 last:border-0 group">
     <div className="flex items-center gap-1.5">
       <span className="font-inter text-xs font-medium text-slate-500 group-hover:text-slate-700 transition-colors">{label}</span>
       {tooltip && (
-        <Tooltip title={tooltip} placement="top">
+        <Tooltip title={tooltip} placement="top" arrow>
           <InfoOutlinedIcon sx={{ fontSize: 14 }} className="text-slate-300 hover:text-blue-500 cursor-help transition-colors" />
         </Tooltip>
       )}
     </div>
-    <div className="flex flex-col items-end gap-0.5">
-      {badge
-        ? <Badge text={badge.text} level={badge.level} />
-        : <span className="font-mono text-xs font-semibold text-slate-800">{value}</span>
-      }
-      {subValue && (
-        <span className="font-mono text-[10px] text-slate-400">{subValue}</span>
+    <div className="flex items-center">
+      {/* Se tiver badge E subValue, usa o design Premium SplitBadge */}
+      {badge && subValue ? (
+        <Tooltip title="Score / Valor Bruto da Predição" placement="top" arrow>
+          <div>
+            <SplitBadge text={badge.text} subText={subValue} level={badge.level} />
+          </div>
+        </Tooltip>
+      ) : badge ? (
+        <Badge text={badge.text} level={badge.level} />
+      ) : (
+        <span className="font-mono text-xs font-semibold text-slate-800 bg-slate-50 px-2 py-0.5 rounded border border-slate-100">{value}</span>
       )}
     </div>
   </div>
 );
 
+// ... (Mantenha o DomainCard igual)
 const DomainCard = ({ title, accentColor, children }: { title: string; accentColor: string; children: React.ReactNode }) => (
   <div className="bg-white border border-slate-200/80 rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden flex flex-col">
     <div className="px-5 py-3 border-b border-slate-100 flex items-center gap-2.5" style={{ backgroundColor: `${accentColor}1A` }}>
@@ -124,14 +149,15 @@ const ToxRow = ({ label, value }: { label: string; value: ToxValue }) => {
         <Icon sx={{ fontSize: 16 }} />
       </div>
       <span className="font-inter text-xs font-bold text-slate-800 flex-1">{label}</span>
-      <div className="flex flex-col items-end gap-0.5">
-        <Badge text={value.category} level={level} />
-        <span className="font-mono text-[10px] text-slate-400">{value.raw.toFixed(2)}</span>
-      </div>
+      <Tooltip title="Probabilidade / Score Bruto" placement="top" arrow>
+        <div>
+           {/* Usa o SplitBadge para Toxicidade também */}
+          <SplitBadge text={value.category} subText={value.raw.toFixed(2)} level={level} />
+        </div>
+      </Tooltip>
     </div>
   );
 };
-
 // ─── Score Ring ───────────────────────────────────────────────────────────────
 
 const CIRCUM = 2 * Math.PI * 36;

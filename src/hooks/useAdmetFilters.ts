@@ -10,8 +10,8 @@
 //   2. O botão "Aplicar" agora tem semântica real: só fica habilitado quando há diff
 
 import { useState, useCallback, useMemo } from 'react';
-import { defaultFilters } from '../../types/filters';
-import type { AdmetFilters } from '../../types/filters';
+import { defaultFilters } from '../types/filters';
+import type { AdmetFilters } from '../types/filters';
 
 // ─── Helpers de comparação profunda ────────────────────────────────────────
 
@@ -167,7 +167,7 @@ export const useAdmetFilters = (): UseAdmetFiltersReturn => {
         setStagedFilters(preset);
     }, []);
 
-   // ── Contagens para badges ─────────────────────────────────────────────────
+    // ── Contagens para badges ─────────────────────────────────────────────────
 
     const countSection = (
         current: unknown,
@@ -176,7 +176,7 @@ export const useAdmetFilters = (): UseAdmetFiltersReturn => {
         // Resolvemos o cast de forma isolada aqui dentro
         const currObj = current as Record<string, unknown>;
         const defObj = defaults as Record<string, unknown>;
-        
+
         let count = 0;
         Object.keys(currObj).forEach(key => {
             const cVal = currObj[key];
@@ -197,15 +197,15 @@ export const useAdmetFilters = (): UseAdmetFiltersReturn => {
         // Olha como o código fica absurdamente mais limpo sem os casts aqui!
         const pfq = countSection(stagedFilters.pfq, defaultFilters.pfq)
             + countSection(stagedFilters.medchem, defaultFilters.medchem);
-            
+
         const absorption = countSection(stagedFilters.absorption, defaultFilters.absorption);
         const distribution = countSection(stagedFilters.distribution, defaultFilters.distribution);
         const metabolism = countSection(stagedFilters.metabolism, defaultFilters.metabolism);
         const excretion = countSection(stagedFilters.excretion, defaultFilters.excretion);
         const toxicity = countSection(stagedFilters.toxicity, defaultFilters.toxicity);
-        
+
         const total = pfq + absorption + distribution + metabolism + excretion + toxicity;
-        
+
         return { pfq, absorption, distribution, metabolism, excretion, toxicity, total };
     }, [stagedFilters]);
 

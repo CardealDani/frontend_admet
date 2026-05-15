@@ -1,9 +1,10 @@
 // src/components/results/ResultsLayout.tsx
 import React, { useState, useEffect } from 'react';
-import { Button } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import ViewListIcon from '@mui/icons-material/ViewList';
 import DownloadIcon from '@mui/icons-material/Download';
+import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
+import { Button, Tooltip, IconButton } from '@mui/material';
 
 import FilterSidebar from './FilterSidebar';
 import ResultsTable from './ResultsTable';
@@ -11,23 +12,23 @@ import ResultsSummaryBar from './ResultsSummaryBar';
 import MoleculePreview from './MoleculePreview';
 import MoleculeDetailPage from '../../pages/MoleculeDetailPage';
 
-import { useAdmetFilters } from '../hooks/useAdmetFilters';
-import { useMoleculeFilter } from '../hooks/useMoleculeFilter';
+import { useAdmetFilters } from '../../hooks/useAdmetFilters';
+import { useMoleculeFilter } from '../../hooks/useMoleculeFilter';
 import type { Molecule } from '../../types/molecules.types';
 
 interface ResultsLayoutProps {
   onBack: () => void;
   isBatch: boolean;
+  molecules: Molecule[]; 
 }
 
-const ResultsLayout = ({ onBack, isBatch }: ResultsLayoutProps) => {
-  const [isSidebarOpen, setIsSidebarOpen]     = useState(true);
+const ResultsLayout = ({ onBack, isBatch, molecules }: ResultsLayoutProps) => {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [selectedMolecule, setSelectedMolecule] = useState<Molecule | null>(null);
   const [detailedMolecule, setDetailedMolecule] = useState<Molecule | null>(null);
 
   const filterEngine = useAdmetFilters();
-  const { filteredMolecules, totalCount, filteredCount } = useMoleculeFilter(filterEngine.appliedFilters);
-
+const { filteredMolecules, totalCount, filteredCount } = useMoleculeFilter(molecules, filterEngine.appliedFilters);
   useEffect(() => {
     if (!isBatch && filteredMolecules.length > 0) {
       setSelectedMolecule(filteredMolecules[0]);
@@ -55,10 +56,10 @@ const ResultsLayout = ({ onBack, isBatch }: ResultsLayoutProps) => {
       m.lipinski,
       m.ames.category, m.hepato.category, m.herg.category,
     ].join(','));
-    const csv  = [headers.join(','), ...rows].join('\n');
+    const csv = [headers.join(','), ...rows].join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
     a.href = url;
     a.download = 'admet_results.csv';
     a.click();
@@ -70,8 +71,8 @@ const ResultsLayout = ({ onBack, isBatch }: ResultsLayoutProps) => {
       <div className={`w-full h-[calc(100vh-65px)] animate-fade-in bg-gray-50 mt-[-2rem] md:mt-0 overflow-hidden ${detailedMolecule ? 'hidden' : 'flex'}`}>
 
         {isBatch && (
-          <aside className={`bg-white flex flex-col h-full shadow-[2px_0_8px_-4px_rgba(0,0,0,0.05)] z-20 shrink-0 overflow-hidden transition-all duration-300 ease-in-out border-r border-gray-200 ${isSidebarOpen ? 'w-[380px]' : 'w-16'}`}>
-            <div className="w-[380px] min-w-[380px] flex flex-col h-full">
+          <aside className={`bg-white flex flex-col h-full shadow-[2px_0_8px_-4px_rgba(0,0,0,0.05)] z-20 shrink-0 overflow-hidden transition-all duration-300 ease-in-out border-r border-gray-200 ${isSidebarOpen ? 'w-[390px]' : 'w-16'}`}>
+            <div className="w-[390px] min-w-[380px] flex flex-col h-full">
               <FilterSidebar
                 isSidebarOpen={isSidebarOpen}
                 toggleSidebar={() => setIsSidebarOpen(v => !v)}
@@ -82,29 +83,52 @@ const ResultsLayout = ({ onBack, isBatch }: ResultsLayoutProps) => {
         )}
 
         <main className="flex-1 flex flex-col h-full overflow-hidden relative bg-slate-50">
-          <div className="flex-1 p-6 h-full flex flex-col min-h-0">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 flex flex-col h-full overflow-hidden">
+          {/* Adicionei gap-3 para separar a navegação do card branco */}
+          <div className="flex-1 px-6 pb-6 pt-3 h-full flex flex-col min-h-0 gap-3"> 
+            
+            {/* ── NAVEGAÇÃO DE PÁGINA (BREADCRUMB) FORA DA TABELA ── */}
+            <div className="flex items-center shrink-0">
+              <button
+                onClick={onBack}
+                className="flex items-center gap-1.5 text-[13px] font-inter font-semibold text-slate-500 hover:text-blue-600 hover:bg-blue-50/80 px-2 py-1 rounded-lg transition-all"
+              >
+                <ArrowBackIosIcon sx={{ fontSize: 11 }} className="mb-[1px]" />
+                Voltar ao Início
+              </button>
+            </div>
 
-              <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center shrink-0">
+            {/* ── CARD PRINCIPAL DA TABELA ── */}
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col h-full overflow-hidden">
+
+              {/* HEADER LIMPO (Apenas Título e Ações da Tabela) */}
+              <div className="px-5 py-4 border-b border-slate-100 flex justify-between items-center shrink-0 bg-white">
+                
                 <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-blue-50 text-blue-600">
+                  <div className="p-2 rounded-lg bg-blue-50/50 border border-blue-100 text-blue-600 shadow-sm">
                     <ViewListIcon fontSize="small" />
                   </div>
-                  <p className="font-nunito_sans font-extrabold text-gray-900 text-lg leading-none">Análise em Lote</p>
+                  <div>
+                    <p className="font-nunito_sans font-extrabold text-slate-800 text-lg leading-none">Análise em Lote</p>
+                    <p className="font-inter text-[11px] font-medium text-slate-400 mt-1">
+                      Explore e filtre os resultados gerados pela predição.
+                    </p>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <Button onClick={onBack} variant="text" startIcon={<AddIcon />}
-                    className="font-inter font-bold normal-case text-blue-600 hover:bg-blue-50 px-4">
-                    Nova Predição
-                  </Button>
-                  <div className="w-px h-6 bg-gray-200" />
-                  <Button variant="outlined" size="small" startIcon={<DownloadIcon />} onClick={handleExportCsv}
-                    className="normal-case font-bold border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 shadow-sm px-4 rounded-lg">
+
+                <div className="flex items-center">
+                  <Button 
+                    variant="outlined" 
+                    size="small" 
+                    startIcon={<DownloadIcon sx={{ fontSize: 15 }} />} 
+                    onClick={handleExportCsv}
+                    className="normal-case font-inter font-bold text-xs border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300 rounded-lg px-3.5 py-1.5 shadow-sm transition-all"
+                  >
                     Exportar CSV
                   </Button>
                 </div>
               </div>
 
+              {/* BARRA DE RESUMO E TABELA */}
               <ResultsSummaryBar filteredCount={filteredCount} totalCount={totalCount} />
 
               <div className="flex-1 overflow-hidden min-h-0">
@@ -114,11 +138,12 @@ const ResultsLayout = ({ onBack, isBatch }: ResultsLayoutProps) => {
                   selectedMolId={selectedMolecule?.id ?? null}
                 />
               </div>
+
             </div>
           </div>
         </main>
 
-        <aside className={`bg-white flex flex-col h-full z-20 shrink-0 overflow-hidden transition-all duration-300 ease-in-out border-l border-gray-200 ${selectedMolecule ? 'w-[380px]' : 'w-0'}`}>
+        <aside className={`bg-white flex flex-col h-full z-20 shrink-0 overflow-hidden transition-all duration-300 ease-in-out border-l border-gray-200 ${selectedMolecule ? 'w-[390px]' : 'w-0'}`}>
           {selectedMolecule && (
             <MoleculePreview
               molecule={selectedMolecule}
