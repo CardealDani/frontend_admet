@@ -16,7 +16,6 @@ import { DistributionSection } from './filters/sections/DistributionSection';
 import { MetabolismSection } from './filters/sections/MetabolismSection';
 import { ExcretionSection } from './filters/sections/ExcretionSection';
 import { ToxicitySection } from './filters/sections/ToxicitySection';
-import { useEffect } from 'react';
 
 interface FilterSidebarProps {
   isSidebarOpen: boolean;
@@ -30,7 +29,6 @@ const FilterSidebar = ({ isSidebarOpen, toggleSidebar, filterEngine }: FilterSid
   // Desestruturamos o motor que veio do pai
   const {
     stagedFilters,
-    appliedFilters,
     hasDiff,
     updateFilter,
     toggleArrayFilter,

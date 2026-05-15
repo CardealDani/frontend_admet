@@ -1,8 +1,8 @@
 // src/components/results/filters/PresetBar.tsx
-import React, { useMemo, useState } from 'react';
+import  { useMemo, useState } from 'react';
 import { 
   Select, MenuItem, IconButton, Tooltip, Dialog, DialogTitle,
-  DialogContent, DialogContentText, DialogActions, Button, TextField, Box
+  DialogContent, DialogContentText, DialogActions, Button, TextField
 } from '@mui/material';
 
 // Ícones

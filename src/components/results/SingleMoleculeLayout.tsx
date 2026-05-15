@@ -1,5 +1,5 @@
 // src/components/results/SingleMoleculeLayout.tsx
-import { Button, Tooltip } from '@mui/material';
+import { Button } from '@mui/material';
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import DownloadIcon from '@mui/icons-material/Download';
 import MoleculeDetail from './MoleculeDetail';

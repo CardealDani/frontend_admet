@@ -1,6 +1,5 @@
 // src/hooks/useMoleculeFilter.ts
 import { useMemo } from 'react';
-import { MOCK_MOLECULES } from '../mocks/molecules.mock';
 import type { AdmetFilters } from '../types/filters';
 import type { Molecule } from '../types/molecules.types';
 

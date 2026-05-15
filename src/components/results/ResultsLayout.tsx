@@ -1,10 +1,9 @@
 // src/components/results/ResultsLayout.tsx
 import React, { useState, useEffect } from 'react';
-import AddIcon from '@mui/icons-material/Add';
 import ViewListIcon from '@mui/icons-material/ViewList';
 import DownloadIcon from '@mui/icons-material/Download';
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
-import { Button, Tooltip, IconButton } from '@mui/material';
+import { Button, } from '@mui/material';
 
 import FilterSidebar from './FilterSidebar';
 import ResultsTable from './ResultsTable';

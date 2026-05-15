@@ -2,7 +2,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import HomePage          from '../pages/HomePage';
 import PredictPage       from '../pages/PredictPage';
-import MoleculeDetailPage from '../pages/MoleculeDetailPage';
 
 const AppRoutes = () => (
   <BrowserRouter basename={import.meta.env.BASE_URL}>
