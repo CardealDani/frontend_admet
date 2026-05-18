@@ -50,7 +50,7 @@ interface SortHeaderProps {
   current: SortField | null;
   dir: SortDir;
   onSort: (f: SortField) => void;
-  align?: 'left' | 'right';
+  align?: 'left' | 'right' | 'center';
 }
 
 const SortHeader = ({ label, field, current, dir, onSort, align = 'left' }: SortHeaderProps) => {
@@ -61,7 +61,7 @@ const SortHeader = ({ label, field, current, dir, onSort, align = 'left' }: Sort
         px-4 py-3 font-inter font-semibold text-[11px] uppercase tracking-wider
         text-gray-400 cursor-pointer select-none whitespace-nowrap
         hover:text-blue-500 transition-colors
-        ${align === 'right' ? 'text-right' : 'text-left'}
+        text-${align}
       `}
       onClick={() => onSort(field)}
     >

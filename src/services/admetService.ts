@@ -40,7 +40,7 @@ export const AdmetService = {
         const newMol: Molecule = {
           ...randomMock,
           id: `MOL-${Math.floor(Math.random() * 10000)}`,
-          name: `Composto ${cleanSmiles.substring(0, 5)}...`,
+          name: `Composto ${cleanSmiles}`,
           smiles: cleanSmiles,
         };
         

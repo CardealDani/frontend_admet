@@ -133,37 +133,51 @@ export const PresetBar = ({
             <MenuItem 
               key={preset.id} 
               value={preset.id}
-              className="group" // Classe essencial para a mágica do hover
               sx={{
                 display: 'flex',
                 alignItems: 'center',
-                minWidth: '240px', // Garante uma largura decente para o menu
-                py: 1, // Um pouco mais de respiro vertical
+                justifyContent: 'space-between', 
+                minWidth: '260px', 
+                py: 1.2, // Um pouco mais de respiro vertical
+                px: 2,
+                borderRadius: '8px', // Bordas mais arredondadas (menos quadradão)
+                mx: '8px',
+                my: '4px',
+                // Hover da linha que afeta o botão de excluir
+                '&:hover .delete-btn': {
+                  opacity: 1,
+                  backgroundColor: '#ffe4e6', 
+                  color: '#e11d48', 
+                }
               }}
             >
-              {/* O texto ocupa o espaço todo (flex-1) e empurra o botão pro canto */}
-              <span className="flex-1 truncate pr-4 font-medium text-slate-700 transition-colors group-hover:text-blue-700">
-                {preset.label}
-              </span>
+              {/* O Tooltip resolve o problema de textos longos cortados */}
+                <span className="truncate pr-4 font-inter text-[13.5px] font-medium text-slate-700 tracking-tight block flex-1 cursor-default">
+                  {preset.label}
+                </span>
 
-              {/* Botão de Excluir (X) - Fica invisível (opacity-0) até focar na linha */}
               {!preset.isBuiltIn && (
-                <div
-                  role="button"
-                  tabIndex={0}
-                  // A MÁGICA VISUAL: Opacidade 0 por padrão, e 100 quando passa o mouse na linha!
-                  className="shrink-0 flex items-center justify-center p-1.5 rounded-md text-slate-300 hover:text-rose-600 hover:bg-rose-100 transition-all opacity-0 group-hover:opacity-100"
+                <IconButton
+                  size="small"
+                  className="delete-btn" 
                   onClick={e => {
-                    e.stopPropagation(); // Evita selecionar o item
+                    e.stopPropagation(); 
                     onDeletePreset(preset.id);
                   }}
                   onMouseDown={e => {
-                    e.stopPropagation(); // Evita que o dropdown feche acidentalmente ao clicar na lixeira
+                    e.stopPropagation(); 
                   }}
                   title="Excluir predefinição"
+                  sx={{
+                    opacity: 0.45, // AGORA ESTÁ SEMPRE VISÍVEL (Sutil)
+                    transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                    color: '#000000', // Cinza médio
+                    padding: '5px',
+                    marginRight: '-4px', 
+                  }}
                 >
-                  <CloseIcon sx={{ fontSize: 14 }} />
-                </div>
+                  <CloseIcon sx={{ fontSize: 16 }} />
+                </IconButton>
               )}
             </MenuItem>
           ))}
