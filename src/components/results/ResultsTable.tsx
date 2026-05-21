@@ -194,7 +194,8 @@ const ResultsTable = ({ molecules, onRowClick, selectedMolId }: ResultsTableProp
             {displayData.length === 0 ? <EmptyState /> : displayData.map((mol, idx) => {
               const isSelected = mol.id === selectedMolId;
               const globalIdx  = safePage * PAGE_SIZE + idx + 1;
-
+              console.log("Rendering molecule:", mol);
+              console.log("Is selected:", isSelected);
               // Indicadores numéricos
               const mwAlert  = mol.mw > 500;
               const logpAlert = mol.logp > 5 || mol.logp < -2;
@@ -205,7 +206,7 @@ const ResultsTable = ({ molecules, onRowClick, selectedMolId }: ResultsTableProp
                   onClick={() => onRowClick(mol)}
                   className={`
                     group cursor-pointer transition-all duration-100
-                    border-b border-gray-50 last:border-0
+                    border-b border-gray-50 last:border-b-0
                     ${isSelected
                       ? 'bg-blue-50/60 border-l-2 border-l-blue-500'
                       : 'border-l-2 border-l-transparent hover:bg-gray-50/70'}

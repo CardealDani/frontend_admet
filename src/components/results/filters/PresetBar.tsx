@@ -144,11 +144,7 @@ export const PresetBar = ({
                 mx: '8px',
                 my: '4px',
                 // Hover da linha que afeta o botão de excluir
-                '&:hover .delete-btn': {
-                  opacity: 1,
-                  backgroundColor: '#ffe4e6', 
-                  color: '#e11d48', 
-                }
+                
               }}
             >
               {/* O Tooltip resolve o problema de textos longos cortados */}
@@ -174,6 +170,11 @@ export const PresetBar = ({
                     color: '#000000', // Cinza médio
                     padding: '5px',
                     marginRight: '-4px', 
+                    '&:hover ': {
+                  opacity: 1,
+                  backgroundColor: '#ffe4e6', 
+                  color: '#e11d48', 
+                }
                   }}
                 >
                   <CloseIcon sx={{ fontSize: 16 }} />

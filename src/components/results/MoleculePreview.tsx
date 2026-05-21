@@ -7,8 +7,10 @@ import WarningRoundedIcon from '@mui/icons-material/WarningRounded';
 import CancelIcon from '@mui/icons-material/Cancel';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import LaunchIcon from '@mui/icons-material/Launch';
+import CheckIcon from '@mui/icons-material/Check';
 
 import type { Molecule, ToxValue } from '../../types/molecules.types';
+import { useState } from 'react';
 
 type RiskLevel = 'good' | 'medium' | 'bad';
 
@@ -151,7 +153,18 @@ interface MoleculePreviewProps {
   onViewFullReport: (mol: Molecule) => void;
 }
 
-const MoleculePreview = ({ molecule: mol, onClose, onViewFullReport }: MoleculePreviewProps) => (
+const MoleculePreview = ({ molecule: mol, onClose, onViewFullReport }: MoleculePreviewProps) => {
+const [copied, setCopied] = useState(false);
+
+const handleCopySmiles = (moleculeSmiles: string) => {
+    navigator.clipboard.writeText(moleculeSmiles);
+    setCopied(true);
+    setTimeout(() => {
+      setCopied(false);
+    }, 2000);
+  };
+
+return (
   <div className="w-full h-full bg-white flex flex-col shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)] relative z-10">
 
     {/* HEADER */}
@@ -165,9 +178,12 @@ const MoleculePreview = ({ molecule: mol, onClose, onViewFullReport }: MoleculeP
             {mol.smiles}
           </Typography>
           <Tooltip title="Copiar SMILES">
-            <IconButton size="small" onClick={() => navigator.clipboard.writeText(mol.smiles)} className="p-1 hover:bg-blue-50 transition-colors">
-              <ContentCopyIcon sx={{ fontSize: 13 }} className="text-slate-400 hover:text-blue-600" />
-            </IconButton>
+            <IconButton size="small" onClick={() => handleCopySmiles(mol.smiles)} className="p-1 hover:bg-blue-50 transition-colors">
+{copied ? (
+                  <CheckIcon sx={{ fontSize: 13 }} className="text-emerald-500 scale-110 transition-transform" />
+                ) : (
+                  <ContentCopyIcon sx={{ fontSize: 13 }} className="text-slate-400 hover:text-blue-600 transition-colors" />
+                )}            </IconButton>
           </Tooltip>
         </div>
       </div>
@@ -256,5 +272,6 @@ const MoleculePreview = ({ molecule: mol, onClose, onViewFullReport }: MoleculeP
     </div>
   </div>
 );
+}
 
 export default MoleculePreview;

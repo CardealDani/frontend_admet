@@ -99,10 +99,6 @@ const ResultsLayout = ({ onBack, isBatch, molecules }: ResultsLayoutProps) => {
     URL.revokeObjectURL(url);
   };
 
-    const handleReset = () => {
-    setActivePresetId('default')
-    resetFilters();
-  }
 
   return (
     <React.Fragment>
@@ -153,7 +149,7 @@ const ResultsLayout = ({ onBack, isBatch, molecules }: ResultsLayoutProps) => {
                       placeholder="Pesquisar ID, Nome ou SMILES..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="peer pl-9 pr-10 py-1.5 bg-slate-50/50 hover:bg-slate-50 border border-slate-200 rounded-lg text-xs font-inter text-slate-700 placeholder:text-slate-400 focus:bg-white focus:ring-[3px] focus:ring-blue-500/10 focus:border-blue-500 outline-none w-64 focus:w-80 transition-all duration-300 shadow-sm"
+                      className="peer pl-9 pr-99 py-1.5 bg-slate-50/50 hover:bg-slate-50 border border-slate-200 rounded-lg text-xs font-inter text-slate-700 placeholder:text-slate-400 focus:bg-white focus:ring-[3px] focus:ring-blue-500/10 focus:border-blue-500 outline-none w-64 focus:w-80 transition-all duration-300 shadow-sm"
                     />
                     
                     {/* Dica de Teclado (Visível apenas quando vazio e sem foco) */}
@@ -167,10 +163,10 @@ const ResultsLayout = ({ onBack, isBatch, molecules }: ResultsLayoutProps) => {
                     {searchQuery && (
                       <button 
                         onClick={() => setSearchQuery('')} 
-                        className="absolute right-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 p-1 rounded-md transition-all animate-fade-in"
+                        className="absolute right-1.5"
                         title="Limpar pesquisa"
                       >
-                        <CloseIcon sx={{ fontSize: 14 }} />
+                        <CloseIcon className='text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-md transition-all animate-fade-in' sx={{ fontSize: 14 }} />
                       </button>
                     )}
                   </div>
