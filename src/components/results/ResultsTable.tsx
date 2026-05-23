@@ -194,8 +194,6 @@ const ResultsTable = ({ molecules, onRowClick, selectedMolId }: ResultsTableProp
             {displayData.length === 0 ? <EmptyState /> : displayData.map((mol, idx) => {
               const isSelected = mol.id === selectedMolId;
               const globalIdx  = safePage * PAGE_SIZE + idx + 1;
-              console.log("Rendering molecule:", mol);
-              console.log("Is selected:", isSelected);
               // Indicadores numéricos
               const mwAlert  = mol.mw > 500;
               const logpAlert = mol.logp > 5 || mol.logp < -2;

@@ -12,7 +12,7 @@ export const usePredictManager = () => {
   const [activeTab, setActiveTab] = useState<'smiles' | 'file'>('file');
   const [smilesInput, setSmilesInput] = useState('');
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
-  const [exampleCount, setExampleCount] = useState(3);
+  const [exampleCount, setExampleCount] = useState(5);
   const [showWarningModal, setShowWarningModal] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [predictedMolecules, setPredictedMolecules] = useState<Molecule[]>([]);
@@ -88,6 +88,7 @@ export const usePredictManager = () => {
 
   const handleDownloadExample = () => {
     const count = Math.min(exampleCount, SAFE_EXAMPLES.length);
+    console.log(`Gerando CSV com ${count} exemplos...`);
     const rows = SAFE_EXAMPLES.slice(0, count).map(m => `${m.smiles},${m.name}`);
     const csvContent = ['smiles,name', ...rows].join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
