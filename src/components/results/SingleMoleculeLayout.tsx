@@ -7,9 +7,6 @@ import type { Molecule } from '../../types/molecules.types';
 import { MOCK_MOLECULES } from '../../mocks/molecules.mock';
 
 interface SingleMoleculeLayoutProps {
-  smiles?: string;
-  onBack: () => void;
-  // Agora recebemos a molécula real vinda do serviço
   molecule?: Molecule; 
 }
 
@@ -46,7 +43,7 @@ const exportCsv = (mol: Molecule) => {
     mol.lipinski, mol.pfizer,
   ];
   const csv  = [headers.join(','), row.join(',')].join('\n');
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
   a.href = url;
@@ -55,51 +52,40 @@ const exportCsv = (mol: Molecule) => {
   URL.revokeObjectURL(url);
 };
 
-const SingleMoleculeLayout = ({ smiles, onBack, molecule: propMolecule }: SingleMoleculeLayoutProps) => {
+const SingleMoleculeLayout = ({ molecule: propMolecule }: SingleMoleculeLayoutProps) => {
   // Fallback para o mock se não vier molécula por props
   const molecule = propMolecule || MOCK_MOLECULES[0];
 
   return (
     <div className="w-full h-[calc(100vh-65px)] flex flex-col bg-slate-50 animate-fade-in overflow-hidden">
 
-      {/* HEADER UNIFICADO (Igual ao MoleculeDetailPage) */}
-      <header className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between shrink-0 sticky top-0 z-30 shadow-sm">
+      {/* SUB-HEADER DA PÁGINA (Apenas utilitários, sem botão de navegação) */}
+      <div className="w-full max-w-6xl mx-auto px-6 pt-4 flex items-center justify-between shrink-0">
         
-        {/* LADO ESQUERDO: Ação de Voltar */}
-        <button
-          onClick={onBack}
-          className="flex items-center gap-1.5 text-sm text-gray-500 font-medium font-inter hover:text-blue-600 transition-colors px-2 py-1.5 rounded-lg hover:bg-blue-50"
-        >
-          <ArrowBackIosIcon sx={{ fontSize: 13 }} />
-          Voltar ao Início
-        </button>
-
-        {/* CENTRO: Identificação da análise atual */}
-        <div className="hidden md:flex items-center gap-2 absolute left-1/2 -translate-x-1/2">
-           <span className="font-inter text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Análise Única</span>
-           <span className="font-mono text-xs text-slate-500 font-bold bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200 max-w-[150px] truncate">
-            {smiles || molecule.smiles}
-          </span>
+        {/* LADO ESQUERDO: Título Limpo */}
+        <div className="flex flex-col">
+          <span className="font-mono text-[10px] font-bold text-slate-400 uppercase tracking-wider">Visualização de Relatório</span>
+          <h2 className="font-nunito_sans font-extrabold text-slate-700 text-sm mt-0.5">Propriedades Farmacocinéticas Avançadas</h2>
         </div>
 
-        {/* LADO DIREITO: Ações de Exportação */}
+        {/* LADO DIREITO: Download */}
         <div className="flex items-center gap-2">
-          <Button 
-            variant="outlined" 
-            size="small" 
-            startIcon={<DownloadIcon sx={{ fontSize: 15 }} />}
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<DownloadIcon sx={{ fontSize: 14 }} />}
             onClick={() => exportCsv(molecule)}
-            className="normal-case font-inter font-semibold text-sm border-gray-200 text-gray-600 hover:bg-gray-50 rounded-lg px-3"
+            className="normal-case font-inter font-semibold text-xs bg-white border-slate-200 text-slate-600 hover:bg-slate-50 rounded-lg px-6 py-1.5"
             sx={{ boxShadow: 'none' }}
           >
-            Exportar CSV
+            Baixar Relatório
           </Button>
         </div>
-      </header>
+      </div>
 
       {/* CONTEÚDO SCROLLÁVEL */}
       <main className="flex-1 overflow-y-auto custom-scrollbar">
-        <div className="max-w-5xl mx-auto px-6 py-6">
+        <div className="max-w-6xl mx-auto px-6 py-6">
           <MoleculeDetail molecule={molecule} />
         </div>
       </main>

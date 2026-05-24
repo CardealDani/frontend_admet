@@ -127,7 +127,6 @@ interface ResultsTableProps {
 }
 
 const ResultsTable = ({ molecules, onRowClick, selectedMolId }: ResultsTableProps) => {
-  console.log("Molecules in ResultsTable:", molecules);
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDir,   setSortDir]   = useState<SortDir>('asc');
   const [page,      setPage]      = useState(0);
@@ -231,8 +230,8 @@ const ResultsTable = ({ molecules, onRowClick, selectedMolId }: ResultsTableProp
                         alt={mol.name}
                         className="
                           w-[68px] h-[56px] object-contain
-                          mix-blend-multiply opacity-85
-                          group-hover:scale-110 transition-transform duration-300
+                          mix-blend-multiply contrast-[1.05] brightness-[1.04]
+                          group-hover:scale-110 transition-transform duration-300  
                         "
                       />
                     </div>

@@ -196,10 +196,21 @@ return (
     <div className="flex-1 overflow-y-auto custom-scrollbar pb-6">
 
       {/* ESTRUTURA 2D */}
-      <div className="mx-5 mt-5 mb-4 h-48 bg-white border border-slate-200 rounded-2xl shadow-sm flex items-center justify-center p-4 overflow-hidden relative group">
-        <div className="absolute inset-0 bg-slate-50/50 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-        <img src={mol.imgUrl} alt={mol.name} className="max-w-full max-h-full object-contain mix-blend-multiply opacity-90 group-hover:scale-105 transition-transform duration-300" />
-      </div>
+      <div className="p-5">
+
+     <div className="relative w-full aspect-square bg-white border border-slate-200 rounded-2xl flex items-center justify-center overflow-hidden p-2">
+  <img 
+    src={mol.imgUrl} 
+    alt={mol.name} 
+    className="
+    w-full h-full object-contain 
+    mix-blend-multiply contrast-[1.05] brightness-[1.04]
+    opacity-90 transition-transform duration-300
+    scale-[1.08] hover:scale-[1.12]
+    " 
+    />
+    </div>
+</div>
 
       {/* CARDS FÍSICO-QUÍMICOS */}
       <div className="flex gap-3 px-5 mb-5">

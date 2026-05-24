@@ -77,13 +77,15 @@ export const usePredictManager = () => {
     }
   };
 
-  const handleConfirmReset = () => {
+  const handleConfirmReset = (pendingNavigation: 'reset' | 'home') => {
     setShowWarningModal(false);
-    setPhase('input');
     setSmilesInput('');
     setUploadedFile(null);
     isProgrammaticBack.current = true;
-    window.history.back();
+    if (pendingNavigation === 'reset') {
+      setPhase('input');
+      window.history.back();
+    }
   };
 
   const handleDownloadExample = () => {

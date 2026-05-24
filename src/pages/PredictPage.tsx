@@ -17,21 +17,77 @@ import AppHeader from '../components/Header/AppHeader';
 import Footer from '../components/Footer/Footer';
 import ResultsLayout from '../components/results/ResultsLayout';
 import SingleMoleculeLayout from '../components/results/SingleMoleculeLayout';
+import type { Molecule } from '../types/molecules.types';
 
 // Componentes e Hooks isolados da predição
 import { usePredictManager } from '../hooks/usePredictManager';
 import { WarningModal } from '../components/predict/WarningModal';
 import { LoadingView } from '../components/predict/LoadingView';
+import { useNavigate } from 'react-router-dom';
 
 const PredictPage = () => {
   // Toda a lógica de estado e funções está agora blindada neste hook
   const manager = usePredictManager();
+  const navigate = useNavigate();
 
   const [isDragging, setIsDragging] = useState(false);
+  const [detailedMolecule, setDetailedMolecule] = useState<Molecule | null>(null);
+const [pendingNavigation, setPendingNavigation] = useState<'reset' | 'home'>('reset');
+
+
+  let currentView: 'predict' | 'results' | 'detail' = 'predict';
+
+  if (manager.phase === 'results') {
+    if (manager.activeTab === 'smiles' && manager.parsedSmilesList.length === 1) {
+      currentView = 'results'; // Molécula única -> "Nova Predição"
+    } else if (detailedMolecule) {
+      currentView = 'detail';  // Dentro do Detalhe -> "Voltar à Tabela"
+    } else {
+      currentView = 'results'; // Tabela de Lote -> "Nova Predição"
+    }
+  }
+
+// Quando clica em "Nova Predição"
+  const handleNewAnalysis = () => {
+    setDetailedMolecule(null);
+    setPendingNavigation('reset'); // Intenção: Apenas limpar os resultados
+    manager.setShowWarningModal(true);
+  };
+
+  // Quando clica no Logo
+  const handleLogoClick = () => {
+    if (manager.phase === 'results') {
+      // Se estiver a ver resultados, abre o aviso e define a intenção para ir para a Home
+      setPendingNavigation('home');
+      manager.setShowWarningModal(true);
+    } else {
+      // Se estiver no Input vazio, vai direto sem avisar
+      navigate('/');
+    }
+  };
+
+  // O que acontece quando o utilizador clica em "Sim, quero sair" no Modal
+  const handleConfirmWarning = () => {
+    manager.handleConfirmReset(pendingNavigation); // Limpa a cache e os estados no manager
+    
+    if (pendingNavigation === 'home') {
+      navigate('/'); // Vai para a Home
+    } else {
+      setPendingNavigation('reset'); // Fica na página limpa
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 overflow-hidden">
-      {manager.phase === 'results' ? <AppHeader onNewAnalysis={() => manager.setShowWarningModal(true)} /> : <Header />}
+{/* ── HEADER INTELIGENTE ── */}
+{manager.phase === 'results' ? <AppHeader currentView={currentView}
+        onNewAnalysis={handleNewAnalysis}
+        onBackToTable={() => setDetailedMolecule(null)} onLogoClick={handleLogoClick} /> : <Header />}
+      {/* <AppHeader 
+        currentView={currentView}
+        onNewAnalysis={handleNewAnalysis}
+        onBackToTable={() => setDetailedMolecule(null)}
+      /> */}
 
       <main className={`flex-grow flex flex-col w-full ${manager.phase === 'results' ? 'pt-16' : 'pt-24 max-w-7xl mx-auto px-6 items-center justify-center'}`}>
 
@@ -242,22 +298,29 @@ const PredictPage = () => {
         {/* FASE 2: LOADING */}
         {manager.phase === 'loading' && <LoadingView />}
 
-        {/* FASE 3: RESULTADOS */}
+{/* FASE 3: RESULTADOS */}
         {manager.phase === 'results' && manager.activeTab === 'smiles' && manager.parsedSmilesList.length === 1 && (
-          <SingleMoleculeLayout smiles={manager.parsedSmilesList[0]} onBack={() => manager.setShowWarningModal(true)} molecule={manager.predictedMolecules[0]} />
+          <SingleMoleculeLayout molecule={manager.predictedMolecules[0]} />
         )}
+        
         {manager.phase === 'results' && ((manager.activeTab === 'smiles' && manager.parsedSmilesList.length > 1) || manager.activeTab === 'file') && (
-          <ResultsLayout onBack={() => manager.setShowWarningModal(true)} isBatch={true} molecules={manager.predictedMolecules}/>
+          <ResultsLayout 
+            isBatch={true} 
+            molecules={manager.predictedMolecules}
+            // Passamos o controle do detalhe para o Layout filho!
+            detailedMolecule={detailedMolecule}
+            setDetailedMolecule={setDetailedMolecule}
+          />
         )}
 
       </main>
 
       {manager.phase !== 'results' && <Footer />}
 
-      <WarningModal
+     <WarningModal
         open={manager.showWarningModal}
         onCancel={() => manager.setShowWarningModal(false)}
-        onConfirm={manager.handleConfirmReset}
+        onConfirm={handleConfirmWarning} // Passamos o novo handler que decide o destino
       />
     </div>
   );

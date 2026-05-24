@@ -1,27 +1,25 @@
 // src/pages/MoleculeDetailPage.tsx
-import { Button, Tooltip } from '@mui/material';
-import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
+import { Button } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
-import ShareIcon from '@mui/icons-material/Share';
+import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos'; // Ícone da seta
 
 import MoleculeDetail from '../components/results/MoleculeDetail';
 import type { Molecule } from '../types/molecules.types';
 
-// ─── Export CSV de uma molécula (Atualizado para o formato .category e .raw) ───
-
+// Lógica completa de exportação do CSV
 const exportSingleCsv = (mol: Molecule) => {
   const headers = [
     'ID','Nome','SMILES','MW','LogP','TPSA','QED',
-    'HIA%','Caco-2 (cat)','Caco-2 (raw)',
-    'P-gp (cat)','P-gp (raw)',
-    'BBB (cat)','BBB (raw)','PPB%','Fu%',
-    'CYP1A2 (cat)','CYP1A2 (raw)',
-    'CYP2D6 (cat)','CYP2D6 (raw)',
-    'CYP3A4 (cat)','CYP3A4 (raw)',
+    'HIA%','Caco-2 (cat)','Caco-2 (value)',
+    'P-gp (cat)','P-gp (value)',
+    'BBB (cat)','BBB (value)','PPB%','Fu%',
+    'CYP1A2 (cat)','CYP1A2 (value)',
+    'CYP2D6 (cat)','CYP2D6 (value)',
+    'CYP3A4 (cat)','CYP3A4 (value)',
     'CL Plasmático','T½',
-    'AMES (cat)','AMES (raw)',
-    'hERG (cat)','hERG (raw)',
-    'Hepato (cat)','Hepato (raw)',
+    'AMES (cat)','AMES (value)',
+    'hERG (cat)','hERG (value)',
+    'Hepato (cat)','Hepato (value)',
     'Lipinski','Pfizer',
   ];
   
@@ -44,78 +42,52 @@ const exportSingleCsv = (mol: Molecule) => {
   ];
 
   const csv = [headers.join(','), row.join(',')].join('\n');
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
   a.href = url;
-  a.download = `${mol.id}_admet.csv`;
+  a.download = `${mol.id}_admet_report.csv`;
   a.click();
   URL.revokeObjectURL(url);
 };
-
-// ─── Página Transformada em View Component ────────────────────────────────────
-
 interface MoleculeDetailPageProps {
   molecule: Molecule;
-  onBack: () => void;
 }
 
-const MoleculeDetailPage = ({ molecule, onBack }: MoleculeDetailPageProps) => {
+const MoleculeDetailPage = ({ molecule }: MoleculeDetailPageProps) => {
+  
   return (
-    <div className="w-full flex h-[calc(100vh-65px)] animate-fade-in bg-slate-50 mt-[-2rem] md:mt-0 flex-col">
+    <div className="w-full flex h-full bg-slate-50 flex-col">
 
-      {/* ── TOPBAR ─────────────────────────────────────────────────────── */}
-      <header className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between shrink-0 sticky top-0 z-30 shadow-sm">
-
-        <button
-          onClick={onBack}
-          className="flex items-center gap-1.5 text-sm text-gray-500 font-medium font-inter hover:text-blue-600 transition-colors px-2 py-1.5 rounded-lg hover:bg-blue-50"
-        >
-          <ArrowBackIosIcon sx={{ fontSize: 13 }} />
-          Voltar à Tabela
-        </button>
-
-        {/* Info Central */}
-        <div className="flex items-center gap-2 absolute left-1/2 -translate-x-1/2">
-          <span className="font-mono text-xs text-slate-500 font-bold bg-slate-100 px-2.5 py-1 rounded-md border border-slate-200">
-            {molecule.id}
-          </span>
+      {/* SUB-HEADER DA PÁGINA (Apenas utilitários, sem botão de navegação) */}
+      <div className="w-full max-w-6xl mx-auto px-6 pt-4 flex items-center justify-between shrink-0">
+        
+        {/* LADO ESQUERDO: Título Limpo */}
+        <div className="flex flex-col">
+          <span className="font-mono text-[10px] font-bold text-slate-400 uppercase tracking-wider">Visualização de Relatório</span>
+          <h2 className="font-nunito_sans font-extrabold text-slate-700 text-sm mt-0.5">Propriedades Farmacocinéticas Avançadas</h2>
         </div>
 
-        {/* Ações */}
+        {/* LADO DIREITO: Download */}
         <div className="flex items-center gap-2">
-          <Tooltip title="A URL simula um link para compartilhamento">
-            <button
-              onClick={() => {
-                navigator.clipboard.writeText(`${window.location.origin}/?molecule=${molecule.id}`);
-                alert('Link de compartilhamento simulado copiado!');
-              }}
-              className="p-2 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-            >
-              <ShareIcon sx={{ fontSize: 17 }} />
-            </button>
-          </Tooltip>
-
           <Button
             variant="outlined"
             size="small"
-            startIcon={<DownloadIcon sx={{ fontSize: 15 }} />}
+            startIcon={<DownloadIcon sx={{ fontSize: 14 }} />}
             onClick={() => exportSingleCsv(molecule)}
-            className="normal-case font-inter font-semibold text-sm border-gray-200 text-gray-600 hover:bg-gray-50 rounded-lg px-3"
+            className="normal-case font-inter font-semibold text-xs bg-white border-slate-200 text-slate-600 hover:bg-slate-50 rounded-lg px-6 py-1.5"
             sx={{ boxShadow: 'none' }}
           >
-            Baixar Relatório (CSV)
+            Baixar Relatório
           </Button>
         </div>
-      </header>
+      </div>
 
-      {/* ── CONTEÚDO ───────────────────────────────────────────────────── */}
       <main className="flex-1 overflow-y-auto custom-scrollbar">
-        <div className="max-w-5xl mx-auto px-6 py-6">
+        <div className="max-w-6xl mx-auto px-6 py-4">
           <MoleculeDetail molecule={molecule} />
         </div>
       </main>
-
     </div>
   );
 };

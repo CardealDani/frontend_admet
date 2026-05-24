@@ -21,15 +21,15 @@ import type { Molecule } from '../../types/molecules.types';
 import { usePresets } from '../../hooks/usePresets';
 
 interface ResultsLayoutProps {
-  onBack: () => void;
   isBatch: boolean;
   molecules: Molecule[];
+  detailedMolecule: Molecule | null;
+  setDetailedMolecule: (mol: Molecule | null) => void;
 }
 
-const ResultsLayout = ({ onBack, isBatch, molecules }: ResultsLayoutProps) => {
+const ResultsLayout = ({ isBatch, molecules, detailedMolecule, setDetailedMolecule }: ResultsLayoutProps) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [selectedMolecule, setSelectedMolecule] = useState<Molecule | null>(null);
-  const [detailedMolecule, setDetailedMolecule] = useState<Molecule | null>(null);
   
   // NOVO: Estado da barra de pesquisa
   const [searchQuery, setSearchQuery] = useState('');
@@ -37,7 +37,6 @@ const ResultsLayout = ({ onBack, isBatch, molecules }: ResultsLayoutProps) => {
   const filterEngine = useAdmetFilters();
   const { filteredMolecules, totalCount } = useMoleculeFilter(molecules, filterEngine.appliedFilters);
 
-  const { resetFilters } = filterEngine;
   const {setActivePresetId} = usePresets();
 
   // 1. Aplicamos a Pesquisa por cima dos Filtros ADMET
@@ -83,18 +82,48 @@ const ResultsLayout = ({ onBack, isBatch, molecules }: ResultsLayoutProps) => {
   }, [molecules]);
 
   const handleExportCsv = () => {
-    const headers = ['ID', 'Nome', 'SMILES', 'MW', 'LogP', 'TPSA', 'Lipinski', 'AMES', 'Hepato', 'hERG'];
+    // 1. Todos os cabeçalhos avançados
+    const headers = [
+      'ID','Nome','SMILES','MW','LogP','TPSA','QED',
+      'HIA%','Caco-2 (cat)','Caco-2 (value)',
+      'P-gp (cat)','P-gp (value)',
+      'BBB (cat)','BBB (value)','PPB%','Fu%',
+      'CYP1A2 (cat)','CYP1A2 (value)',
+      'CYP2D6 (cat)','CYP2D6 (value)',
+      'CYP3A4 (cat)','CYP3A4 (value)',
+      'CL Plasmático','T½',
+      'AMES (cat)','AMES (value)',
+      'hERG (cat)','hERG (value)',
+      'Hepato (cat)','Hepato (value)',
+      'Lipinski','Pfizer',
+    ];
+    
+    // 2. Mapeamento completo de todas as propriedades da molécula
     const rows = searchedMolecules.map(m => [
-      m.id, m.name, m.smiles, m.mw, m.logp, m.tpsa,
-      m.lipinski,
-      m.ames.category, m.hepato.category, m.herg.category,
+      m.id, m.name, m.smiles, m.mw, m.logp, m.tpsa, m.qed,
+      m.absorptionPercent,
+      m.caco2.category, m.caco2.raw,
+      m.pgpInhibitor.category, m.pgpInhibitor.raw,
+      m.bbb.category, m.bbb.raw,
+      m.ppb, m.fu,
+      m.cyp1a2Substrate.category, m.cyp1a2Substrate.raw,
+      m.cyp2d6Substrate.category, m.cyp2d6Substrate.raw,
+      m.cyp3a4Substrate.category, m.cyp3a4Substrate.raw,
+      m.clPlasma, m.tHalf,
+      m.ames.category, m.ames.raw,
+      m.herg.category, m.herg.raw,
+      m.hepato.category, m.hepato.raw,
+      m.lipinski, m.pfizer,
     ].join(','));
+    
     const csv = [headers.join(','), ...rows].join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    
+    // 3. A MÁGICA DOS ACENTOS: Adicionamos o '\uFEFF' (BOM - Byte Order Mark)
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'admet_results.csv';
+    a.download = 'admet_resultados_lote.csv';
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -209,9 +238,11 @@ const ResultsLayout = ({ onBack, isBatch, molecules }: ResultsLayoutProps) => {
                     <p className="font-nunito_sans font-extrabold text-slate-800 text-xl">
                       Nenhum resultado visível
                     </p>
-                    <p className="font-inter text-slate-500 text-[13px] mt-2 max-w-sm leading-relaxed">
-                      Não encontrámos moléculas com o termo <span className="font-bold text-slate-700">"{searchQuery}"</span> sob as restrições atuais.
-                    </p>
+                    {searchQuery && (
+                      <p className="font-inter text-slate-500 text-[13px] mt-2 max-w-sm leading-relaxed">
+                        Não encontramos moléculas com o termo <span className="font-bold text-slate-700">"{searchQuery}"</span> sob as restrições atuais.
+                      </p>
+                    )}
 
                     {/* A MÁGICA DE UX ACONTECE AQUI (Card Premium) */}
                     {hiddenByFiltersCount > 0 && (
@@ -275,7 +306,6 @@ const ResultsLayout = ({ onBack, isBatch, molecules }: ResultsLayoutProps) => {
       {detailedMolecule && (
         <MoleculeDetailPage
           molecule={detailedMolecule}
-          onBack={() => window.history.back()}
         />
       )}
     </React.Fragment>
