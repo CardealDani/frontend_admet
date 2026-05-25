@@ -1,10 +1,8 @@
 // src/components/results/ResultsLayout.tsx
 import React, { useState, useEffect, useMemo } from 'react';
-import { Button, Tooltip } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
+import { Button} from '@mui/material';
 import ViewListIcon from '@mui/icons-material/ViewList';
 import DownloadIcon from '@mui/icons-material/Download';
-import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';

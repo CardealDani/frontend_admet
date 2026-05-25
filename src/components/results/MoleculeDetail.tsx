@@ -1,6 +1,6 @@
 // src/components/results/MoleculeDetail.tsx
 import { useState } from 'react';
-import { Dialog, Tooltip, IconButton } from '@mui/material';
+import { Tooltip, IconButton } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';

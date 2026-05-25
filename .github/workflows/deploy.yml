@@ -1,37 +1,49 @@
-name: Deploy
+name: Deploy to GitHub Pages
 
 on:
   push:
-    branches:
-      - develop
+    branches: ["develop"] # Ou "master", dependendo do nome da sua branch
 
-# ISSO AQUI É A CHAVE PARA FUNCIONAR
+# Permissões necessárias para o GitHub Pages
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
 
 jobs:
-  build-and-deploy:
-    name: Build and Deploy
+  # ─── ETAPA 1: BUILD (Gerar os ficheiros) ───
+  build:
     runs-on: ubuntu-latest
-    
     steps:
-      - name: Checkout repo
+      - name: Checkout do código
         uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'npm'
 
-      - name: Install dependencies
-        run: npm ci # 'npm ci' é mais seguro e rápido para automações que 'npm install'
+      - name: Instalar Dependências
+        run: npm ci # ou npm install
 
-      - name: Build project
+      - name: Fazer o Build (Vite)
         run: npm run build
 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+      # 🔴 O SEGREDO ESTÁ AQUI: Esta é a action que estava a faltar!
+      - name: Upload do Artifact para o Pages
+        uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
+          path: './dist' # Pasta padrão onde o Vite coloca os ficheiros prontos
+
+  # ─── ETAPA 2: DEPLOY (Publicar no ar) ───
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    needs: build # Garante que o deploy só roda depois do build terminar
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy para o GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4 # ou v5, que é a versão que você estava a usar

@@ -1,7 +1,6 @@
 // src/pages/MoleculeDetailPage.tsx
 import { Button } from '@mui/material';
 import DownloadIcon from '@mui/icons-material/Download';
-import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos'; // Ícone da seta
 
 import MoleculeDetail from '../components/results/MoleculeDetail';
 import type { Molecule } from '../types/molecules.types';
