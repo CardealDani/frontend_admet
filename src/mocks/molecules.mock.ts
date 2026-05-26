@@ -12,9 +12,29 @@ const getImageUrl = (smiles: string) =>
 
 export const RAW_MOLECULES: MoleculeApiResponse[] = [
   {
-    id: 'MOL-001', name: 'Aspirina', smiles: 'CC(=O)OC1=CC=CC=C1C(=O)O', imgUrl: getImageUrl('CC(=O)OC1=CC=CC=C1C(=O)O'),
-    mw: 180.16, logp: 1.19, tpsa: 63.6, qed: 0.72, absorptionPercent: 95, caco2: -4.8, pgpInhibitor: 0.1, bbb: 0.1, ppb: 49, fu: 51,
-    cyp1a2Substrate: 0.1, cyp2d6Substrate: 0.1, cyp3a4Substrate: 0.1, clPlasma: 5.2, tHalf: 3.1, ames: 0.1, hepato: 0.1, herg: 0.1, lipinski: 'Pass', pfizer: 'Pass'
+    id: 'MOL-001', 
+    name: 'Aspirina', 
+    smiles: 'CC(=O)OC1=CC=CC=C1C(=O)O', 
+    imgUrl: getImageUrl('CC(=O)OC1=CC=CC=C1C(=O)O'),
+    // Físico-Química e Drug-Likeness (Baseado no ADMETlab)
+    mw: 180.04, logp: 1.19, tpsa: 63.6, qed: 0.55, lipinski: 'Pass', pfizer: 'Pass',
+    // Absorção
+    absorptionPercent: 95, 
+    caco2: -4.98, // ADMETlab: -4.985 (Verde/Excelente)
+    pgpInhibitor: 0.05, // ADMETlab: --- (Verde/Excelente)
+    // Distribuição
+    bbb: 0.95, // ADMETlab: +++ (Vermelho/Ruim - alta penetração indesejada)
+    ppb: 60.3, // ADMETlab: 60.3%
+    fu: 40.1,  // ADMETlab: 40.1%
+    // Metabolismo (CYPs)
+    cyp1a2Substrate: 0.1, cyp2d6Substrate: 0.1, cyp3a4Substrate: 0.1, 
+    // Excreção
+    clPlasma: 2.76, // ADMETlab: 2.766
+    tHalf: 0.82,    // ADMETlab: 0.822
+    // Toxicidade
+    ames: 0.25,   // ADMETlab: 0.256 (Verde/Excelente)
+    herg: 0.01,   // ADMETlab: 0.015 (Verde/Excelente)
+    hepato: 0.407  // ADMETlab (DILI): 0.744 (Vermelho/Ruim)
   },
   {
     id: 'MOL-002', name: 'Cafeína', smiles: 'CN1C=NC2=C1C(=O)N(C(=O)N2C)C', imgUrl: getImageUrl('CN1C=NC2=C1C(=O)N(C(=O)N2C)C'),
@@ -28,8 +48,8 @@ export const RAW_MOLECULES: MoleculeApiResponse[] = [
   },
   {
     id: 'MOL-004', name: 'Ibuprofeno', smiles: 'CC(C)CC1=CC=C(C=C1)C(C)C(=O)O', imgUrl: getImageUrl('CC(C)CC1=CC=C(C=C1)C(C)C(=O)O'),
-    mw: 206.28, logp: 3.97, tpsa: 37.3, qed: 0.81, absorptionPercent: 100, caco2: -4.2, pgpInhibitor: 0.1, bbb: 0.1, ppb: 99, fu: 1,
-    cyp1a2Substrate: 0.1, cyp2d6Substrate: 0.5, cyp3a4Substrate: 0.1, clPlasma: 3.8, tHalf: 2.0, ames: 0.1, hepato: 0.1, herg: 0.1, lipinski: 'Pass', pfizer: 'Fail'
+    mw: 206.13, logp: 3.574, tpsa: 37.3, qed: 0.822, absorptionPercent: 100, caco2: -4.301, pgpInhibitor: 0.1, bbb: 0.1, ppb: 99, fu: 1,
+    cyp1a2Substrate: 0.1, cyp2d6Substrate: 0.5, cyp3a4Substrate: 0.1, clPlasma: 1.038, tHalf: 1.449, ames: 0.046, hepato: 0.74, herg: 0.165, lipinski: 'Pass', pfizer: 'Fail'
   },
   {
     id: 'MOL-005', name: 'Metformina', smiles: 'CN(C)C(=N)N=C(N)N', imgUrl: getImageUrl('CN(C)C(=N)N=C(N)N'),
@@ -133,8 +153,8 @@ export const RAW_MOLECULES: MoleculeApiResponse[] = [
   },
   {
     id: 'MOL-025', name: 'Naproxeno', smiles: 'CC(C1=CC2=C(C=C1)C=C(C=C2)OC)C(=O)O', imgUrl: getImageUrl('CC(C1=CC2=C(C=C1)C=C(C=C2)OC)C(=O)O'),
-    mw: 230.26, logp: 3.18, tpsa: 46.5, qed: 0.81, absorptionPercent: 99, caco2: -4.3, pgpInhibitor: 0.1, bbb: 0.1, ppb: 99, fu: 1,
-    cyp1a2Substrate: 0.5, cyp2d6Substrate: 0.1, cyp3a4Substrate: 0.1, clPlasma: 1.9, tHalf: 14.0, ames: 0.1, hepato: 0.1, herg: 0.1, lipinski: 'Pass', pfizer: 'Pass'
+    mw: 230.09, logp: 2.893, tpsa: 46.5, qed: 0.81, absorptionPercent: 99, caco2: -4.524, pgpInhibitor: 0.1, bbb: 0.1, ppb: 99, fu: 1,
+    cyp1a2Substrate: 0.5, cyp2d6Substrate: 0.1, cyp3a4Substrate: 0.1, clPlasma:	0.51, tHalf: 1.736, ames: 0.298, hepato: 0.662, herg: 0.146, lipinski: 'Pass', pfizer: 'Pass'
   },
   {
     id: 'MOL-026', name: 'Celecoxibe', smiles: 'CC1=CC=C(C=C1)C2=CC(=NN2C3=CC=C(C=C3)S(=O)(=O)N)C(F)(F)F', imgUrl: getImageUrl('CC1=CC=C(C=C1)C2=CC(=NN2C3=CC=C(C=C3)S(=O)(=O)N)C(F)(F)F'),
@@ -223,8 +243,8 @@ export const RAW_MOLECULES: MoleculeApiResponse[] = [
   },
   {
     id: 'MOL-043', name: 'Cloroquina', smiles: 'CCN(CC)CCCC(C)NC1=C2C=CC(=CC2=NC=C1)Cl', imgUrl: getImageUrl('CCN(CC)CCCC(C)NC1=C2C=CC(=CC2=NC=C1)Cl'),
-    mw: 319.87, logp: 4.63, tpsa: 28.2, qed: 0.61, absorptionPercent: 95, caco2: -4.8, pgpInhibitor: 0.5, bbb: 0.85, ppb: 55, fu: 45,
-    cyp1a2Substrate: 0.1, cyp2d6Substrate: 0.85, cyp3a4Substrate: 0.85, clPlasma: 6.0, tHalf: 1200.0, ames: 0.1, hepato: 0.85, herg: 0.85, lipinski: 'Pass', pfizer: 'Pass'
+    mw: 319.18, logp:4.733, tpsa: 28.16, qed: 0.756, absorptionPercent: 95, caco2: -4.8, pgpInhibitor: 0.5, bbb: 0.85, ppb: 55, fu: 45,
+    cyp1a2Substrate: 0.1, cyp2d6Substrate: 0.85, cyp3a4Substrate: 0.85, clPlasma: 6.0, tHalf: 1200.0, ames: 0.512, hepato: 0.727, herg: 0.958, lipinski: 'Pass', pfizer: 'Fail'
   },
   {
     id: 'MOL-044', name: 'Hidroxicloroquina', smiles: 'CCN(CCO)CCCC(C)NC1=C2C=CC(=CC2=NC=C1)Cl', imgUrl: getImageUrl('CCN(CCO)CCCC(C)NC1=C2C=CC(=CC2=NC=C1)Cl'),
@@ -239,7 +259,7 @@ export const RAW_MOLECULES: MoleculeApiResponse[] = [
   {
     id: 'MOL-046', name: 'Cetoconazol', smiles: 'CC1=CC=C(C=C1)N2C=CN=C2', imgUrl: getImageUrl('CC1=CC=C(C=C1)N2C=CN=C2'),
     mw: 531.43, logp: 4.34, tpsa: 67.5, qed: 0.35, absorptionPercent: 75, caco2: -4.8, pgpInhibitor: 0.85, bbb: 0.1, ppb: 99, fu: 1,
-    cyp1a2Substrate: 0.1, cyp2d6Substrate: 0.1, cyp3a4Substrate: 0.85, clPlasma: 15.0, tHalf: 8.0, ames: 0.1, hepato: 0.85, herg: 0.85, lipinski: 'Fail', pfizer: 'Fail'
+    cyp1a2Substrate: 0.1, cyp2d6Substrate: 0.1, cyp3a4Substrate: 0.85, clPlasma: 15.0, tHalf: 8.0, ames: 0.481, hepato: 0.629, herg: 0.403, lipinski: 'Fail', pfizer: 'Fail'
   },
   {
     id: 'MOL-047', name: 'Fluconazol', smiles: 'C1=CN(C=N1)CC(CN2C=NC=N2)(C3=C(C=C(C=C3)F)F)O', imgUrl: getImageUrl('C1=CN(C=N1)CC(CN2C=NC=N2)(C3=C(C=C(C=C3)F)F)O'),

@@ -18,7 +18,7 @@ const DOMAIN_NAMES  = ['Absorção', 'Distribuição', 'Metabolismo', 'Excreçã
 
 const toxRisk  = (v: ToxValue):     RiskLevel => v.category === 'Excelente'    ? 'good' : v.category === 'Médio' ? 'medium' : 'bad';
 const ternRisk = (v: TernaryValue): RiskLevel => v.category === 'Excelente' ? 'good' : v.category === 'Médio'   ? 'medium' : 'bad';
-const bbbRisk  = (v: TernaryValue): RiskLevel => v.category === 'Ruim'      ? 'good' : v.category === 'Médio'   ? 'medium' : 'bad';
+const bbbRisk  = (v: TernaryValue): RiskLevel => v.category === 'Excelente'  ? 'good' : v.category === 'Médio'   ? 'medium' : 'bad';
 const binRisk  = (v: BinaryValue):  RiskLevel => v.category === 'Excelente' ? 'good' : 'bad';
 const cypRisk  = (v: YesNoValue):   RiskLevel => v.category === 'Não'       ? 'good' : 'medium';
 
@@ -61,12 +61,14 @@ const SplitBadge = ({ text, subText, level }: { text: string; subText: string; l
   </div>
 );
 
-const PropRow = ({ label, value, badge, tooltip, subValue }: { label: string; value?: string; badge?: { text: string; level: RiskLevel }; tooltip?: string; subValue?: string; }) => (
-  <div className="flex justify-between items-center py-2.5 border-b border-slate-100 last:border-0 group">
-    <div className="flex items-center gap-1.5">
-      <span className="font-inter text-xs font-medium text-slate-500 group-hover:text-slate-700 transition-colors">{label}</span>
-      {tooltip && (
-        <Tooltip title={tooltip} placement="top" arrow>
+const PropRow = ({ label, value, badge, tooltip, subValue }: { label: string; value?: string; badge?: { text: string; level: RiskLevel }; tooltip?: string; subValue?: string; }) => {
+  console.log(`PropRow renderizado para: ${label} ${badge?.text} ${subValue}`);
+  return (
+    <div className="flex justify-between items-center py-2.5 border-b border-slate-100 last:border-0 group">
+      <div className="flex items-center gap-1.5">
+        <span className="font-inter text-xs font-medium text-slate-500 group-hover:text-slate-700 transition-colors">{label}</span>
+        {tooltip && (
+          <Tooltip title={tooltip} placement="top" arrow>
           <InfoOutlinedIcon sx={{ fontSize: 14 }} className="text-slate-300 hover:text-blue-500 cursor-help transition-colors" />
         </Tooltip>
       )}
@@ -84,6 +86,7 @@ const PropRow = ({ label, value, badge, tooltip, subValue }: { label: string; va
     </div>
   </div>
 );
+}
 
 const DomainCard = ({ title, accentColor, children }: { title: string; accentColor: string; children: React.ReactNode }) => (
   <div className="bg-white border border-slate-200/80 rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden flex flex-col">
@@ -137,7 +140,10 @@ const RADAR_AXES = [
   { label: 'Absorção',   angle: -90  }, { label: 'Distribuição',      angle: -18  },
   { label: 'Metabolismo',     angle:  54  }, { label: 'Excreção',   angle: 126  }, { label: 'Toxicidade', angle: 198  },
 ];
-const axPt = (angle: number, r: number) => ({ x: CX + r * Math.cos(toRad(angle)), y: CY + r * Math.sin(toRad(angle)) });
+const axPt = (angle: number, r: number, label?: boolean) => ({ 
+  x: CX + r * Math.cos(toRad(angle)),
+  y: CY + r * Math.sin(toRad(( (label && angle == -90) ? -70 : angle))) 
+});
 
 const AdmetRadar = ({ scores }: { scores: number[] }) => {
   const pts  = RADAR_AXES.map((ax, i) => axPt(ax.angle, scores[i] * RMAX));
@@ -162,7 +168,7 @@ const AdmetRadar = ({ scores }: { scores: number[] }) => {
       <path d={path} fill="rgba(37,99,235,0.15)" stroke="#2563eb" strokeWidth="2.5" strokeLinejoin="round" className="transition-all duration-700" />
       {pts.map((p, i) => <circle key={i} cx={p.x} cy={p.y} r="5" fill={DOMAIN_COLORS[i]} stroke="#fff" strokeWidth="2" />)}
       {RADAR_AXES.map(ax => {
-        const tip = axPt(ax.angle, RMAX + 22);
+        const tip = axPt(ax.angle, RMAX + 32, true);
         return <text key={ax.label} x={tip.x.toFixed(1)} y={tip.y.toFixed(1)} fontSize="11" fill="#64748b" fontWeight="700" textAnchor="middle" dominantBaseline="central" fontFamily="Inter, sans-serif">{ax.label}</text>;
       })}
     </svg>
@@ -195,6 +201,8 @@ const MoleculeDetail = ({ molecule: mol }: { molecule: Molecule }) => {
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
   };
+
+  console.log('MoleculeDetail renderizado para:', mol);
 
   return (
     <div className="w-full flex flex-col gap-6 animate-fade-in pb-12 px-2">

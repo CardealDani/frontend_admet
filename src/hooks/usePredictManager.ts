@@ -106,6 +106,6 @@ export const usePredictManager = () => {
     phase, activeTab, setActiveTab, smilesInput, setSmilesInput, uploadedFile, setUploadedFile,
     exampleCount, setExampleCount, showWarningModal, setShowWarningModal, errorMessage, predictedMolecules,
     parsedSmilesList, isButtonDisabled, handlePredict, handleConfirmReset, handleDownloadExample,
-    handleLoadSmilesExamples: () => setSmilesInput(SAFE_EXAMPLES.slice(0, 3).map(m => m.smiles).join(',\n')),
+    handleLoadSmilesExamples: () => setSmilesInput(SAFE_EXAMPLES.slice(0, 10).map(m => m.smiles).join(',\n')),
   };
 };

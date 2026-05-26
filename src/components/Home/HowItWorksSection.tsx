@@ -1,5 +1,6 @@
-// src/pages/Home/HowItWorksSection.tsx
+// src/pages/Home/FeaturesSection.tsx
 import { Typography } from '@mui/material';
+
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import MemoryIcon from '@mui/icons-material/Memory';
 import AssessmentIcon from '@mui/icons-material/Assessment';
@@ -25,13 +26,16 @@ const steps = [
   },
 ];
 
+
 const HowItWorksSection = () => {
   return (
-    // Fundo levemente diferente (blue-50 bem suave) para diferenciar seções, 
-    // mas mantendo a paleta
-    <section className="w-full py-24 bg-blue-50/30 relative overflow-hidden">
+    // Mantendo o fundo branco limpo, com overflow hidden para decorações
+    <section className="w-full py-24 bg-white relative overflow-hidden">
       
-      <div className="max-w-7xl mx-auto px-6 relative z-10">
+      {/* Decoração de fundo sutil (Blur Azul) para manter a identidade da Hero */}
+      <div className="absolute top-0 left-0 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-blue-50/50 rounded-full blur-3xl pointer-events-none"></div>
+
+           <div className="max-w-7xl mx-auto px-6 relative z-10">
         {/* Cabeçalho Padronizado */}
         <div className="text-center max-w-3xl mx-auto mb-20">
            <Typography variant="h3" className="font-nunito_sans font-bold text-gray-900 mb-4">
@@ -44,9 +48,20 @@ const HowItWorksSection = () => {
 
         {/* Steps */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
-          {/* Linha conectora (estilo HeroSection) visível apenas em telas grandes */}
-          <svg className="hidden md:block absolute top-12 left-0 w-full h-20 text-blue-200 pointer-events-none" style={{ zIndex: 0 }}>
-             <path d="M100,20 Q300,80 500,20 T900,20" fill="none" stroke="currentColor" strokeWidth="2" strokeDasharray="8 8" />
+        {/* LINHA TRACEJADA RESPONSIVA (Fluxo de Trabalho) */}
+          <svg 
+            className="hidden md:block absolute top-6 left-0 w-full h-16 text-blue-200 pointer-events-none -z-10" 
+            preserveAspectRatio="none" 
+            viewBox="0 0 1000 40"
+          >
+            <path 
+              d="M 166,20 Q 333,50 500,20 T 863,20" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="3" 
+              strokeDasharray="8 8" 
+              vectorEffect="non-scaling-stroke" 
+            />
           </svg>
 
           {steps.map((step) => (

@@ -52,8 +52,8 @@ const Header = () => {
                 {/* DESKTOP Menu */}
                 <div className="hidden lg:flex items-center gap-8">
                     <a href="/#home" onClick={(e) => handleNavigation(e, '#home')} className="font-inter text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors cursor-pointer">Início</a>
-                    <a href="/#key_features" onClick={(e) => handleNavigation(e, '#key_features')} className="font-inter text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors cursor-pointer">Funcionalidades</a>
-                    <a href="/#how_it_works" onClick={(e) => handleNavigation(e, '#how_it_works')} className="font-inter text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors cursor-pointer">Como Funciona</a>
+                    <a href="/#key_features" onClick={(e) => handleNavigation(e, '#key_features')} className="font-inter text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors cursor-pointer">Como Funciona</a>
+                    <a href="/#how_it_works" onClick={(e) => handleNavigation(e, '#how_it_works')} className="font-inter text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors cursor-pointer">Ferramentas</a>
                     <a href="/#about_project" onClick={(e) => handleNavigation(e, '#about_project')} className="font-inter text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors cursor-pointer">Sobre o Projeto</a>
                     <PredictButton onClick={navigateToAnalysis} />
                 </div>

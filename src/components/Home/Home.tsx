@@ -1,7 +1,7 @@
 // src/pages/Home/Home.tsx
 import HeroSection from './HeroSection';
-import FeaturesSection from './FeaturesSection';
-import HowItWorksSection from './HowItWorksSection';
+import FeaturesSection from './HowItWorksSection';
+import HowItWorksSection from './FeaturesSection';
 import AboutSection from './AboutSection';
 
 const Home = () => {

@@ -11,7 +11,7 @@ const PredictButton = ({ onClick, text }: { onClick?: () => void, text?: string 
         size="large"
         className="w-fit rounded-full bg-blue-600 px-7 py-2 text-lg font-bold normal-case text-white shadow-lg flex items-center gap-2 font-nunito_sans transition-all duration-300 hover:bg-blue-700 hover:shadow-blue-500/50 hover:scale-105 active:scale-95"
       >
-        {text || "Predict"}
+        {text || "Predição"}
         <ScienceIcon fontSize="small" className="group-hover:animate-bounce" />
 
       </Button>
