@@ -149,23 +149,28 @@ const ResultsLayout = ({ isBatch, molecules, detailedMolecule, setDetailedMolecu
             {/* ── CARD PRINCIPAL ── */}
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col h-full overflow-hidden">
 
-              <div className="px-5 py-4 border-b border-slate-100 flex justify-between items-center shrink-0 bg-white">
+           <div className="px-4 py-3 md:px-5 md:py-4 border-b border-slate-100 flex justify-between items-center shrink-0 bg-white gap-3">
                 
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-blue-50/50 border border-blue-100 text-blue-600 shadow-sm">
+                {/* LADO ESQUERDO: Título e Ícone */}
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="p-2 rounded-lg bg-blue-50/50 border border-blue-100 text-blue-600 shadow-sm hidden md:block shrink-0">
                     <ViewListIcon fontSize="small" />
                   </div>
-                  <div>
-                    <p className="font-nunito_sans font-extrabold text-slate-800 text-lg leading-none">Análise em Lote</p>
-                    <p className="font-inter text-[11px] font-medium text-slate-400 mt-1">
+                  <div className="flex flex-col min-w-0">
+                    <p className="font-nunito_sans font-extrabold text-slate-800 text-base md:text-lg leading-none whitespace-nowrap">
+                      Análise em Lote
+                    </p>
+
+                    <p className="font-inter text-[11px] font-medium text-slate-400 mt-1 hidden lg:block whitespace-normal leading-tight max-w-[280px] lg:max-w-full">
                       Explore e filtre os resultados gerados pela predição.
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3">
+                {/* LADO DIREITO: Pesquisa e Ações */}
+                <div className="flex items-center gap-2 md:gap-4 shrink-0">
+                  
                   {/* BARRA DE PESQUISA */}
-                  {/* BARRA DE PESQUISA PREMIUM */}
                   <div className="relative flex items-center group">
                     <SearchIcon 
                       className="absolute left-3 text-slate-400 transition-colors group-focus-within:text-blue-500" 
@@ -176,16 +181,9 @@ const ResultsLayout = ({ isBatch, molecules, detailedMolecule, setDetailedMolecu
                       placeholder="Pesquisar ID, Nome ou SMILES..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="peer pl-9 pr-99 py-1.5 bg-slate-50/50 hover:bg-slate-50 border border-slate-200 rounded-lg text-xs font-inter text-slate-700 placeholder:text-slate-400 focus:bg-white focus:ring-[3px] focus:ring-blue-500/10 focus:border-blue-500 outline-none w-64 focus:w-80 transition-all duration-300 shadow-sm"
+                      className="peer pl-9 pr-7 py-1.5 bg-slate-50/50 hover:bg-slate-50 border border-slate-200 rounded-lg text-xs font-inter text-slate-700 placeholder:text-slate-400 focus:bg-white focus:ring-[3px] focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all duration-300 shadow-sm w-28 sm:w-36 md:w-48 xl:w-64 xl:focus:w-80"
                     />
                     
-                    {/* Dica de Teclado (Visível apenas quando vazio e sem foco) */}
-                    {!searchQuery && (
-                      <div className="absolute right-2.5 flex items-center pointer-events-none opacity-100 peer-focus:opacity-0 transition-opacity duration-200">
-                        
-                      </div>
-                    )}
-
                     {/* Botão de Limpar (Close) */}
                     {searchQuery && (
                       <button 
@@ -198,16 +196,18 @@ const ResultsLayout = ({ isBatch, molecules, detailedMolecule, setDetailedMolecu
                     )}
                   </div>
 
-                  <div className="w-px h-6 bg-slate-200" />
+                  <div className="w-px h-6 bg-slate-200 hidden md:block shrink-0" />
 
+                  {/* AJUSTE DO BOTÃO CSV: Perde o texto "Exportar" em telas menores que lg (1024px) */}
                   <Button 
                     variant="outlined" 
                     size="small" 
-                    startIcon={<DownloadIcon sx={{ fontSize: 15 }} />} 
+                    startIcon={<DownloadIcon sx={{ fontSize: 15 }} className="hidden sm:inline-block" />} 
                     onClick={handleExportCsv}
-                    className="normal-case font-inter font-bold text-xs border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300 rounded-lg px-3.5 py-1.5 shadow-sm transition-all shrink-0"
+                    className="normal-case font-inter font-bold text-xs border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300 rounded-lg px-2 lg:px-3.5 py-1.5 shadow-sm transition-all shrink-0"
                   >
-                    Exportar CSV
+                    <span className="hidden lg:inline">Exportar CSV</span>
+                    <span className="inline lg:hidden">CSV</span>
                   </Button>
                 </div>
               </div>

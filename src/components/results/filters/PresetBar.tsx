@@ -1,5 +1,5 @@
 // src/components/results/filters/PresetBar.tsx
-import  { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { 
   Select, MenuItem, IconButton, Tooltip, Dialog, DialogTitle,
   DialogContent, DialogContentText, DialogActions, Button, TextField
@@ -21,7 +21,6 @@ interface PresetBarProps {
   stagedFilters: AdmetFilters;
   onSelectPreset: (preset: PresetDefinition) => void;
   onSavePreset: (label: string, filters: AdmetFilters) => void;
-  // Nova prop recomendada para atualizar um preset existente (sobrescrever)
   onUpdatePreset?: (id: string, filters: AdmetFilters) => void; 
   onDeletePreset: (id: string) => void;
 }
@@ -40,12 +39,18 @@ export const PresetBar = ({
 
   const activePreset = allPresets.find(p => p.id === activePresetId);
 
-  // 1. A LÓGICA DE ESTADO "DIRTY" (Sujo/Modificado)
-  // Comparamos os filtros atuais com os filtros salvos no preset ativo
+  // 1. LÓGICA DE ESTADO "DIRTY" (Sujo/Modificado)
   const isModified = useMemo(() => {
     if (!activePreset) return false;
     return JSON.stringify(activePreset.filters) !== JSON.stringify(stagedFilters);
   }, [activePreset, stagedFilters]);
+
+  // 2. LÓGICA DE VALIDAÇÃO DE NOME DUPLICADO
+  const isDuplicateName = useMemo(() => {
+    const trimmedLabel = newPresetLabel.trim().toLowerCase();
+    if (!trimmedLabel) return false;
+    return allPresets.some(p => p.label.toLowerCase() === trimmedLabel);
+  }, [newPresetLabel, allPresets]);
 
   const handleSelect = (id: string) => {
     const preset = allPresets.find(p => p.id === id);
@@ -53,7 +58,7 @@ export const PresetBar = ({
   };
 
   const handleSaveConfirm = () => {
-    if (newPresetLabel.trim()) {
+    if (newPresetLabel.trim() && !isDuplicateName) {
       onSavePreset(newPresetLabel, stagedFilters);
       setNewPresetLabel('');
       setSaveDialogOpen(false);
@@ -64,14 +69,14 @@ export const PresetBar = ({
     if (activePreset && onUpdatePreset) {
       onUpdatePreset(activePreset.id, stagedFilters);
     } else {
-      // Fallback caso não tenha a função de update: salva com o mesmo nome
       onSavePreset(activePreset?.label || 'Atualizado', stagedFilters);
     }
   };
 
   return (
     <>
-      <div className="flex items-center gap-2 mx-3 mt-4 mb-6">
+      {/* Contêiner principal com min-w-0 para evitar vazamento de layout */}
+      <div className="flex items-center gap-2 mx-3 mt-4 mb-6 min-w-0">
         
         {/* DROPDOWN DE PRESETS */}
         <Select
@@ -83,12 +88,16 @@ export const PresetBar = ({
           renderValue={(selected) => {
             const selectedPreset = allPresets.find(p => p.id === selected);
             return (
-              <div className="flex items-center gap-2">
-                <span className="font-semibold text-slate-800">{selectedPreset?.label}</span>
-                {/* Indicador Visual de que o preset foi alterado */}
+              // Ajuste de Layout: overflow-hidden e truncate para não quebrar a tela
+              <div className="flex items-center gap-2 overflow-hidden w-full pr-1">
+                <span className="font-semibold text-slate-800 truncate">
+                  {selectedPreset?.label}
+                </span>
+                
                 {isModified && (
-                  <span className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-100/50 text-amber-700 text-[10px] font-bold uppercase tracking-wider">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />
+                  // shrink-0 garante que a tag "Modificado" nunca seja esmagada
+                  <span className="shrink-0 flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-100/50 text-amber-700 text-[10px] font-bold uppercase tracking-wider">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
                     Modificado
                   </span>
                 )}
@@ -97,10 +106,10 @@ export const PresetBar = ({
           }}
           sx={{
             flex: 1,
+            minWidth: 0, // CRÍTICO: Impede que o Select expanda além do flexbox pai
             borderRadius: '10px',
             boxShadow: '0 1px 2px 0 rgba(0,0,0,0.05)',
             '& .MuiOutlinedInput-notchedOutline': { 
-              // Se modificado, a borda do select fica sutilmente laranja
               borderColor: isModified ? '#fcd34d' : '#e2e8f0', 
               borderRadius: '10px',
               transition: 'border-color 0.3s ease'
@@ -110,7 +119,7 @@ export const PresetBar = ({
               borderColor: '#3b82f6', borderWidth: '1px',
               boxShadow: '0 0 0 3px rgba(59,130,246,0.15)',
             },
-            '& .MuiSelect-select': { paddingY: '8.5px' },
+            '& .MuiSelect-select': { paddingY: '8.5px', overflow: 'hidden' }, // overflow hidden aqui também
           }}
           MenuProps={{
             PaperProps: {
@@ -138,16 +147,13 @@ export const PresetBar = ({
                 alignItems: 'center',
                 justifyContent: 'space-between', 
                 minWidth: '260px', 
-                py: 1.2, // Um pouco mais de respiro vertical
+                py: 1.2,
                 px: 2,
-                borderRadius: '8px', // Bordas mais arredondadas (menos quadradão)
+                borderRadius: '8px',
                 mx: '8px',
                 my: '4px',
-                // Hover da linha que afeta o botão de excluir
-                
               }}
             >
-              {/* O Tooltip resolve o problema de textos longos cortados */}
                 <span className="truncate pr-4 font-inter text-[13.5px] font-medium text-slate-700 tracking-tight block flex-1 cursor-default">
                   {preset.label}
                 </span>
@@ -165,16 +171,16 @@ export const PresetBar = ({
                   }}
                   title="Excluir predefinição"
                   sx={{
-                    opacity: 0.45, // AGORA ESTÁ SEMPRE VISÍVEL (Sutil)
+                    opacity: 0.45,
                     transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                    color: '#000000', // Cinza médio
+                    color: '#000000',
                     padding: '5px',
                     marginRight: '-4px', 
                     '&:hover ': {
-                  opacity: 1,
-                  backgroundColor: '#ffe4e6', 
-                  color: '#e11d48', 
-                }
+                      opacity: 1,
+                      backgroundColor: '#ffe4e6', 
+                      color: '#e11d48', 
+                    }
                   }}
                 >
                   <CloseIcon sx={{ fontSize: 16 }} />
@@ -184,14 +190,13 @@ export const PresetBar = ({
           ))}
         </Select>
 
-        {/* BOTÕES DE AÇÃO LÓGICA */}
+        {/* BOTÕES DE AÇÃO LÓGICA (Com shrink-0 para nunca serem esmagados) */}
 
-        {/* Botão de Atualizar (Sobrescrever) - Só aparece se estiver modificado e NÃO for nativo do sistema */}
         {isModified && !activePreset?.isBuiltIn && (
           <Tooltip title="Atualizar predefinição atual" placement="top">
             <IconButton
               onClick={handleUpdateCurrent}
-              className="bg-amber-50 border border-amber-200 rounded-[10px] text-amber-600 hover:bg-amber-100 hover:border-amber-300 transition-all shadow-sm"
+              className="bg-amber-50 border border-amber-200 rounded-[10px] text-amber-600 hover:bg-amber-100 hover:border-amber-300 transition-all shadow-sm shrink-0"
               sx={{ width: 40, height: 40 }}
             >
               <SaveOutlinedIcon fontSize="small" />
@@ -199,11 +204,10 @@ export const PresetBar = ({
           </Tooltip>
         )}
 
-        {/* Botão de Salvar Como Novo (Sempre aparece) */}
         <Tooltip title="Salvar como nova predefinição" placement="top">
           <IconButton
             onClick={() => setSaveDialogOpen(true)}
-            className="bg-white border border-slate-200 rounded-[10px] text-slate-500 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 transition-all shadow-sm"
+            className="bg-white border border-slate-200 rounded-[10px] text-slate-500 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600 transition-all shadow-sm shrink-0"
             sx={{ width: 40, height: 40 }}
           >
             <BookmarkAddOutlinedIcon fontSize="small" />
@@ -212,7 +216,7 @@ export const PresetBar = ({
       </div>
 
       {/* ======================================================================= */}
-      {/* DIALOG DE SALVAR PRESET (Versão Premium)                                */}
+      {/* DIALOG DE SALVAR PRESET                                                 */}
       {/* ======================================================================= */}
       <Dialog
         open={saveDialogOpen}
@@ -249,6 +253,8 @@ export const PresetBar = ({
             value={newPresetLabel}
             onChange={e => setNewPresetLabel(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleSaveConfirm()}
+            error={isDuplicateName} // Fica vermelho se existir
+            helperText={isDuplicateName ? "Já existe uma predefinição com este nome." : ""} // Mensagem de erro
             sx={{ 
               '& .MuiOutlinedInput-root': { 
                 borderRadius: '12px',
@@ -257,7 +263,11 @@ export const PresetBar = ({
                 '& fieldset': { borderColor: '#e2e8f0' },
                 '&:hover fieldset': { borderColor: '#cbd5e1' },
                 '&.Mui-focused fieldset': { borderColor: '#3b82f6', borderWidth: '2px' },
-              } 
+              },
+              '& .MuiFormHelperText-root': {
+                fontFamily: 'Inter',
+                fontWeight: 600
+              }
             }}
           />
         </DialogContent>
@@ -277,8 +287,8 @@ export const PresetBar = ({
           </Button>
           <Button
             onClick={handleSaveConfirm}
+            disabled={!newPresetLabel.trim() || isDuplicateName} // Desabilita se vazio ou duplicado
             variant="contained"
-            disabled={!newPresetLabel.trim()}
             disableElevation
             sx={{
               fontFamily: 'Nunito Sans', fontWeight: 800, textTransform: 'none',
