@@ -161,9 +161,9 @@ const ResultsLayout = ({ isBatch, molecules, detailedMolecule, setDetailedMolecu
                       Análise em Lote
                     </p>
 
-                    <p className="font-inter text-[11px] font-medium text-slate-400 mt-1 hidden lg:block whitespace-normal leading-tight max-w-[280px] lg:max-w-full">
+                    {/* <p className="font-inter text-[11px] font-medium text-slate-400 mt-1 hidden lg:block whitespace-normal leading-tight max-w-[280px] lg:max-w-full">
                       Explore e filtre os resultados gerados pela predição.
-                    </p>
+                    </p> */}
                   </div>
                 </div>
 
