@@ -3,8 +3,7 @@ import { adaptMolecule } from '../utils/moleculeAdapter';
 import type { MoleculeApiResponse } from '../utils/moleculeAdapter';
 import type { Molecule } from '../types/molecules.types';
 
-const getImageUrl = (id: string) => `src/assets/molecules/${id}.png`;
-
+const getImageUrl = (id: string) => `${import.meta.env.BASE_URL}molecules/${id}.png`;
 // Dicionário de Valores para forçar variação no Frontend:
 // Probabilidades (AMES, Hepato, hERG, CYP, BBB, Pgp): 0.1 (Excelente/Não), 0.5 (Médio), 0.85 (Ruim/Sim/Tóxico)
 // Caco-2: -4.5 (Excelente), -5.3 (Médio), -6.0 (Ruim)
