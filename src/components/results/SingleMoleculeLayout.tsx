@@ -74,7 +74,7 @@ const SingleMoleculeLayout = ({ molecule: propMolecule }: SingleMoleculeLayoutPr
             size="small"
             startIcon={<DownloadIcon sx={{ fontSize: 14 }} />}
             onClick={() => exportCsv(molecule)}
-            className="normal-case font-inter font-semibold text-xs bg-white border-slate-200 text-slate-600 hover:bg-slate-50 rounded-lg px-6 py-1.5"
+            className="normal-case font-nunito_sans font-bold text-xs bg-blue-600 text-white font-nunito_sans hover:bg-blue-700 rounded-lg px-6 py-1.5"
             sx={{ boxShadow: 'none' }}
           >
             Baixar Relatório

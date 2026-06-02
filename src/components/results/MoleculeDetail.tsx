@@ -3,11 +3,17 @@ import { useState } from 'react';
 import { Tooltip, IconButton } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import CancelIcon from '@mui/icons-material/Cancel';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import CloseIcon from '@mui/icons-material/Close';
+import ShieldOutlinedIcon from '@mui/icons-material/ShieldOutlined';
+import ScienceIcon from '@mui/icons-material/Science';
+import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined';
+import SyncOutlinedIcon from '@mui/icons-material/SyncOutlined';
+import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined';
+import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+
 
 import type { Molecule, ToxValue, TernaryValue, BinaryValue, YesNoValue } from '../../types/molecules.types';
 
@@ -88,10 +94,10 @@ const PropRow = ({ label, value, badge, tooltip, subValue }: { label: string; va
 );
 }
 
-const DomainCard = ({ title, accentColor, children }: { title: string; accentColor: string; children: React.ReactNode }) => (
+const DomainCard = ({ title, accentColor, children, icon }: { title: string; accentColor: string; children: React.ReactNode; icon: React.ReactNode }) => (
   <div className="bg-white border border-slate-200/80 rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden flex flex-col">
     <div className="px-5 py-3 border-b border-slate-100 flex items-center gap-2.5" style={{ backgroundColor: `${accentColor}1A` }}>
-      <span className="w-2.5 h-2.5 rounded-full shadow-sm" style={{ background: accentColor }} />
+      {icon}
       <span className="font-inter text-xs font-bold uppercase tracking-wider" style={{ color: accentColor }}>{title}</span>
     </div>
     <div className="px-5 py-3 flex-1 flex flex-col justify-center">{children}</div>
@@ -279,20 +285,20 @@ const MoleculeDetail = ({ molecule: mol }: { molecule: Molecule }) => {
 
       {/* ── GRID ADMET linha 1 ────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        <DomainCard title="Físico-Química" accentColor={DOMAIN_COLORS[2]}>
+        <DomainCard title="Físico-Química" accentColor={DOMAIN_COLORS[2]} icon={<ScienceIcon sx={{ fontSize: 18  }} className="text-blue-500"  />}>
           <PropRow label="Peso Molecular" value={`${mol.mw.toFixed(1)} g/mol`} />
           <PropRow label="LogP"           value={mol.logp.toFixed(2)} />
           <PropRow label="TPSA"           value={`${mol.tpsa.toFixed(1)} Å²`} />
           <PropRow label="QED Score"      badge={{ text: mol.qed.toFixed(2), level: mol.qed >= 0.7 ? 'good' : mol.qed >= 0.4 ? 'medium' : 'bad' }} />
         </DomainCard>
 
-        <DomainCard title="Absorção" accentColor={DOMAIN_COLORS[0]}>
+        <DomainCard title="Absorção" accentColor={DOMAIN_COLORS[0]} icon={<ShieldOutlinedIcon sx={{ fontSize: 18  }} className="text-teal-500"  />}>
           <PropRow label="HIA" value={`${mol.absorptionPercent}%`} />
           <PropRow label="Caco-2" badge={{ text: mol.caco2.category, level: binRisk(mol.caco2) }} subValue={`${mol.caco2.raw.toFixed(2)} log cm/s`} />
           <PropRow label="Inibidor P-gp" badge={{ text: mol.pgpInhibitor.category, level: ternRisk(mol.pgpInhibitor) }} subValue={`prob ${mol.pgpInhibitor.raw.toFixed(2)}`} />
         </DomainCard>
 
-        <DomainCard title="Distribuição" accentColor={DOMAIN_COLORS[1]}>
+        <DomainCard title="Distribuição" accentColor={DOMAIN_COLORS[1]} icon={<LocalShippingOutlinedIcon sx={{ fontSize: 18 }} className="text-gray-500" />}>
           <PropRow label="BBB" tooltip="Para alvos periféricos, baixa penetração BBB é excelente." badge={{ text: mol.bbb.category, level: bbbRisk(mol.bbb) }} subValue={`prob ${mol.bbb.raw.toFixed(2)}`} />
           <PropRow label="PPB" value={`${mol.ppb}%`} />
           <PropRow label="Fração livre (Fu)" value={`${mol.fu}%`} />
@@ -301,18 +307,18 @@ const MoleculeDetail = ({ molecule: mol }: { molecule: Molecule }) => {
 
       {/* ── GRID ADMET linha 2 ────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        <DomainCard title="Metabolismo" accentColor={DOMAIN_COLORS[2]}>
+        <DomainCard title="Metabolismo" accentColor={DOMAIN_COLORS[2]} icon={<SyncOutlinedIcon sx={{ fontSize: 18 }} className="text-gray-500" />}>
           <PropRow label="CYP1A2" badge={{ text: mol.cyp1a2Substrate.category === 'Não' ? 'Não substrato' : 'Substrato', level: cypRisk(mol.cyp1a2Substrate) }} subValue={`prob ${mol.cyp1a2Substrate.raw.toFixed(2)}`} />
           <PropRow label="CYP2D6" badge={{ text: mol.cyp2d6Substrate.category === 'Não' ? 'Não substrato' : 'Substrato', level: cypRisk(mol.cyp2d6Substrate) }} subValue={`prob ${mol.cyp2d6Substrate.raw.toFixed(2)}`} />
           <PropRow label="CYP3A4" badge={{ text: mol.cyp3a4Substrate.category === 'Não' ? 'Não substrato' : 'Substrato', level: cypRisk(mol.cyp3a4Substrate) }} subValue={`prob ${mol.cyp3a4Substrate.raw.toFixed(2)}`} />
         </DomainCard>
 
-        <DomainCard title="Excreção" accentColor={DOMAIN_COLORS[3]}>
+        <DomainCard title="Excreção" accentColor={DOMAIN_COLORS[3]} icon={<LogoutOutlinedIcon sx={{ fontSize: 18 }} className="text-gray-500" />}>
           <PropRow label="CL plasmático" value={`${mol.clPlasma} mL/min/kg`} />
           <PropRow label="Meia-vida (T½)" value={`${mol.tHalf} h`} />
         </DomainCard>
 
-        <DomainCard title="Toxicidade" accentColor={DOMAIN_COLORS[4]}>
+        <DomainCard title="Toxicidade" accentColor={DOMAIN_COLORS[4]} icon={<WarningAmberIcon sx={{ fontSize: 18 }} className="text-red-500" />}>
           <ToxRow label="Mutagênico (AMES)"   value={mol.ames} />
           <ToxRow label="Cardiotóxico (hERG)" value={mol.herg} />
           <ToxRow label="Hepatotóxico"        value={mol.hepato} />

@@ -204,7 +204,7 @@ const ResultsLayout = ({ isBatch, molecules, detailedMolecule, setDetailedMolecu
                     size="small" 
                     startIcon={<DownloadIcon sx={{ fontSize: 15 }} className="hidden sm:inline-block" />} 
                     onClick={handleExportCsv}
-                    className="normal-case font-inter font-bold text-xs border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300 rounded-lg px-2 lg:px-3.5 py-1.5 shadow-sm transition-all shrink-0"
+                    className="normal-case font-bold text-xs text-slate-600 bg-blue-600 text-white font-nunito_sans hover:bg-blue-700 rounded-lg px-2 lg:px-3.5 py-1.5 shadow-sm transition-all shrink-0"
                   >
                     <span className="hidden lg:inline">Exportar CSV</span>
                     <span className="inline lg:hidden">CSV</span>
