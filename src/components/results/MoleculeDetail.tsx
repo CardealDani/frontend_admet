@@ -256,28 +256,47 @@ const MoleculeDetail = ({ molecule: mol }: { molecule: Molecule }) => {
             </Tooltip>
           </div>
 
-          <div className="flex flex-wrap justify-center md:justify-start gap-2 mt-4">
-            {[
-              { label: 'MW',   val: `${mol.mw.toFixed(1)} g/mol` },
-              { label: 'LogP', val: mol.logp.toFixed(2) },
-              { label: 'TPSA', val: `${mol.tpsa.toFixed(1)} Å²` },
-              { label: 'QED',  val: mol.qed.toFixed(2) },
-            ].map(t => (
-              <div key={t.label} className="flex items-center overflow-hidden rounded-md border border-slate-200 shadow-sm">
-                <span className="bg-slate-50 text-slate-500 font-inter text-[10px] font-bold px-2 py-1 uppercase tracking-wider">{t.label}</span>
-                <span className="bg-white text-slate-700 font-mono text-[11px] font-bold px-2.5 py-1">{t.val}</span>
-              </div>
-            ))}
-            {[
-              { label: 'Lipinski', val: mol.lipinski },
-              { label: 'Pfizer',   val: mol.pfizer },
-            ].map(r => (
-              <div key={r.label} className={`flex items-center overflow-hidden rounded-md border shadow-sm ${r.val === 'Pass' ? 'border-emerald-200' : 'border-rose-200'}`}>
-                <span className={`font-inter text-[10px] font-bold px-2 py-1 uppercase tracking-wider ${r.val === 'Pass' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>{r.label}</span>
-                <span className={`bg-white font-mono text-[11px] font-bold px-2.5 py-1 ${r.val === 'Pass' ? 'text-emerald-700' : 'text-rose-700'}`}>{r.val}</span>
-              </div>
-            ))}
-          </div>
+         <div className="flex flex-wrap justify-center md:justify-start gap-2 mt-4">
+  {/* Propriedades padrão */}
+  {[
+    { label: 'MW',   val: `${mol.mw.toFixed(1)} g/mol` },
+    { label: 'LogP', val: mol.logp.toFixed(2) },
+    { label: 'TPSA', val: `${mol.tpsa.toFixed(1)} Å²` },
+  ].map(t => (
+    <div key={t.label} className="flex items-center overflow-hidden rounded-md border border-slate-200 shadow-sm">
+      <span className="bg-slate-50 text-slate-500 font-inter text-[10px] font-bold px-2 py-1 uppercase tracking-wider">{t.label}</span>
+      <span className="bg-white text-slate-700 font-mono text-[11px] font-bold px-2.5 py-1">{t.val}</span>
+    </div>
+  ))}
+
+  {/* Propriedade QED com 3 níveis de cores (good, medium, bad) */}
+  {(() => {
+    const isGood = mol.qed >= 0.7;
+    const isMedium = mol.qed >= 0.4 && mol.qed < 0.7;
+    
+    const borderClass = isGood ? 'border-emerald-200' : isMedium ? 'border-amber-200' : 'border-rose-200';
+    const labelClass = isGood ? 'bg-emerald-50 text-emerald-700' : isMedium ? 'bg-amber-50 text-amber-700' : 'bg-rose-50 text-rose-700';
+    const valueClass = isGood ? 'text-emerald-700' : isMedium ? 'text-amber-700' : 'text-rose-700';
+
+    return (
+      <div key="QED" className={`flex items-center overflow-hidden rounded-md border shadow-sm ${borderClass}`}>
+        <span className={`font-inter text-[10px] font-bold px-2 py-1 uppercase tracking-wider ${labelClass}`}>QED</span>
+        <span className={`bg-white font-mono text-[11px] font-bold px-2.5 py-1 ${valueClass}`}>{mol.qed.toFixed(2)}</span>
+      </div>
+    );
+  })()}
+
+  {/* Filtros de Druglikeness (Pass / Fail) */}
+  {[
+    { label: 'Lipinski', val: mol.lipinski },
+    { label: 'Pfizer',   val: mol.pfizer },
+  ].map(r => (
+    <div key={r.label} className={`flex items-center overflow-hidden rounded-md border shadow-sm ${r.val === 'Pass' ? 'border-emerald-200' : 'border-rose-200'}`}>
+      <span className={`font-inter text-[10px] font-bold px-2 py-1 uppercase tracking-wider ${r.val === 'Pass' ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>{r.label}</span>
+      <span className={`bg-white font-mono text-[11px] font-bold px-2.5 py-1 ${r.val === 'Pass' ? 'text-emerald-700' : 'text-rose-700'}`}>{r.val}</span>
+    </div>
+  ))}
+</div>
         </div>
 
         <div className="hidden md:block"><ScoreRing score={admetScore} /></div>
